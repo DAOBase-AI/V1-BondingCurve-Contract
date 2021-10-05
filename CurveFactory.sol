@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT
+
+pragma solidity 0.8.6;
+
+import "@openzeppelin/contracts/access/Ownable.sol"; 
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "./Curve.sol";
+//import "./CurveEth.sol";
+
+
+
+contract CurveFactory is Ownable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+    
+    address payable public creator;
+    uint256 public platformProfitRate = 1;
+    address[] public curves;
+    mapping(address => address) public curveOwnerMap;
+    mapping(address => EnumerableSet.AddressSet) private userCurves;
+    
+    constructor() {
+    }
+    
+    // 设置平台手续费收取账号
+    function setCreator(address payable _creator) public onlyOwner {
+        creator = _creator;
+    }
+
+    // 设置平台手续费比例，只能由owner操作
+    // _platformProfitRate: 百分比，1表示1%
+    function setPlatformProfitRate(uint256 _platformProfitRate) public onlyOwner {
+        platformProfitRate = _platformProfitRate;
+    }
+    
+    // 创建curve
+    // _bussinessCreator: B端用户设置的手续费收取账号
+    // _bussinessRate: B端用户收取的手续费比例
+    // _virtualBalance: 虚拟流动性数量，譬如设置为10，表示铸造第0个NFT时的费用实际是按照第11个NFT的费用进行计价
+    // _erc20: 表示用户铸造NFT时需要支付哪种ERC20，如果此值为0x000...000, 表示用户需要通过支付ETH来铸造NFT
+    // _initMintPrice: 铸造NFT的价格系数，即f(x)=m*x^n+m中的m的值
+    // _n,_d: _n/_d即f(x)=m*x^n+m中n的值
+    function createCurve(address payable _bussinessCreator, uint256 _bussinessRate,
+                         uint256 _virtualBalance, address _erc20, uint256 _initMintPrice,
+                         uint256 _n, uint256 _d) public {
+        require(_bussinessRate <= 19, "C: bussinessRate is too high.");   
+        address curve = address(new Curve(creator, platformProfitRate, _bussinessCreator, _bussinessRate, _virtualBalance, _erc20, _initMintPrice, _n, _d));
+        userCurves[msg.sender].add(curve);
+        curves.push(curve);
+        curveOwnerMap[curve] = msg.sender;
+    }
+    
+    // 获取已经创建好的curve总数
+    function getCurveTotalNumber() public view returns(uint256) {
+        return curves.length;
+    }
+    
+    // 获取某个用户已经创建好的curve总数
+    function getUserCurveNumber(address _userAddr) public view returns(uint256) {
+        return userCurves[_userAddr].length();
+    }
+    
+    // 通过用户地址和序号获取curve地址
+    function getUserCurve(address _userAddr, uint256 _index) public view returns(address) {
+        return userCurves[_userAddr].at(_index);
+    }
+}

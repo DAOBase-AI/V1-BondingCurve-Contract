@@ -1,0 +1,115 @@
+{
+	"compiler": {
+		"version": "0.8.6+commit.11564f7e"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"name": "init",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "a",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "b",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "c",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "d",
+						"type": "uint256"
+					}
+				],
+				"name": "pow",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {
+				"init()": {
+					"details": "Should be executed either during construction or after construction (if too large for the constructor)"
+				},
+				"pow(uint256,uint256,uint256,uint256)": {
+					"details": "Compute (a / b) ^ (c / d)"
+				}
+			},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"NFTBondingCurve/math-utils/AnalyticMath.sol": "AnalyticMath"
+		},
+		"evmVersion": "berlin",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": true,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"NFTBondingCurve/math-utils/AnalyticMath.sol": {
+			"keccak256": "0xe6fd185c123ba9165dcbc135f19cddca1e01c59c33cbde5478825af7d979091c",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://69d43aff4e979a50fa7b99f8d065d8e0844d1d014570de9013fcd6bf70a04718",
+				"dweb:/ipfs/QmUYNjwCStF2pgR8MSTMZfjSpnw18Upjn5Y4YLmCXr2b1i"
+			]
+		},
+		"NFTBondingCurve/math-utils/IntegralMath.sol": {
+			"keccak256": "0x400c892b777a079aee5ae420eadd79a3a617644cda1cb6cdda90b182b1d411f8",
+			"license": "SEE LICENSE IN LICENSE",
+			"urls": [
+				"bzz-raw://a9dbf997dc4065b39d44f995aa5a68bf192108dd033549dde2e5ea825035a033",
+				"dweb:/ipfs/QmW7SewvwvM2NsaDdbJ5ChytKNpJFdJZVonBUzSdKQrfKw"
+			]
+		},
+		"NFTBondingCurve/math-utils/common/Uint.sol": {
+			"keccak256": "0x72d0adb8d821cef2773a0bdff4789132236997474b0574bdf0041f40e961636f",
+			"license": "SEE LICENSE IN LICENSE",
+			"urls": [
+				"bzz-raw://5f50e66f621fa94ab27fd3d31c44b6537f79ed1f1369de594a2ca4fc715237b3",
+				"dweb:/ipfs/QmWWRe7QKmkD67iK9ainKP55Hkeh6LBsfQWqJp6Vx1B1qD"
+			]
+		}
+	},
+	"version": 1
+}
