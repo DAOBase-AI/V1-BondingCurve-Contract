@@ -7,56 +7,55 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./ERC1155Ex.sol";
 import "./math-utils/AnalyticMath.sol";
 
-// Curve类，通过ERC20铸造NFT
+/**@dev thePASS Bonding Curve
+*PASS is orgnization's erc1155 token on curve  
+*Users can mint PASS via deposting erc20 contribution token into curve
+*Curve Formula: f(X) = m*[X^（n/d)]+v
+*m, slope of bonding curve
+*x = totalsupply of PASS 
+*f(x) = PASS Price
+*N = n/d
+*v = virtual balance, Displacement of bonding curve
+*/
+
 contract Curve {
     using SafeMath for uint256;
 
-    IERC20 public erc20;          // 铸造NFT需要消耗的ERC20
-    uint256 public initMintPrice; // 初始铸造价格
-    uint256 public initBurnPrice; // 初始销毁价格
-    uint256 public n;             // 幂分子
-    uint256 public d;             // 幂分母
-    bool public bIntPower;        // 幂是否为整数
-    uint256 public virtualBalance;  // 虚拟流动性数值
+    IERC20 public erc20;             // contribution token on bonding curve
+    uint256 public initMintPrice;    // the first PASS minting price on the curve = m + v
+    uint256 public initBurnPrice;    // the last PASS burning price on the curve
+    uint256 public n;                // power function numerator
+    uint256 public d;                // power function denominator
+    bool public bIntPower;           // determine if the power is an integer
+    uint256 public virtualBalance;   // vitual balance for setting a reasonable initial price
     
-    uint256 public reserve;   // 本合约当前拥有的ERC20数量
+    uint256 public reserve;          // reserve of contribution tokens stored in bonding curve AMM pool
     
-    address payable public platformCreator;   // 平台费收取账号
-    uint256 public platformRate;              // 平台费收取比例
+    address payable public platform; // thePass platform's commission account
+    uint256 public platformRate;     // thePass platform's commission rate in pph 
     
-    address payable public bussinessCreator;  // B端手续费收取账号
-    uint256 public bussinessRate;             // B端手续费收取比例
+    address payable public creator;  // creator's commission account
+    uint256 public creatorRate;      // creator's commission rate in pph
 
-    ERC1155Ex public neolastics;                // ERC1155Ex合约
-    
-    IAnalyticMath public analyticMath = IAnalyticMath(0x6eC7dE12F63fe9D234B169aca4958D3ad1aA1872);  // 数学方法，可计算幂函数
+    ERC1155Ex public thePASS;        // orgnization's erc1155 based PASSes
+    // Mathmatical method for calculating power function
+    IAnalyticMath public analyticMath = IAnalyticMath(0x6eC7dE12F63fe9D234B169aca4958D3ad1aA1872); 
 
-    event Minted(uint256 indexed tokenId, uint256 indexed pricePaid, uint256 indexed reserveAfterMint, uint256 balance);
-    event Burned(uint256 indexed tokenId, uint256 indexed priceReceived, uint256 indexed reserveAfterBurn, uint256 balance);
+    event Minted(uint256 indexed tokenId, uint256 indexed Cost, uint256 indexed reserveAfterMint, uint256 balance);
+    event Burned(uint256 indexed tokenId, uint256 indexed Return, uint256 indexed reserveAfterBurn, uint256 balance);
 
-    /*
-    构造函数
-    _platformCreator: 平台手续费收取账号
-    _platformRate: 平台手续费比例
-    _bussinessCreator: B端用户设置的手续费收取账号
-    _bussinessRate: B端用户收取的手续费比例
-    _virtualBalance: 虚拟流动性数量，譬如设置为10，表示铸造第0个NFT时的费用实际是按照第11个NFT的费用进行计价
-    _erc20: 表示用户铸造NFT时需要支付哪种ERC20
-    _initMintPrice: 铸造NFT的价格系数，即f(x)=m*x^n+m中的m的值
-    _n,_d: _n/_d即f(x)=m*x^n+m中n的值
-    */
-    constructor (address payable _platformCreator, uint256 _platformRate, 
-                 address payable _bussinessCreator, uint256 _bussinessRate,
+    constructor (address payable _platform, uint256 _platformRate, 
+                 address payable _creator, uint256 _creatorRate,
                  uint256 _virtualBalance, address _erc20, uint256 _initMintPrice,
                  uint256 _n, uint256 _d) {
-        platformCreator = _platformCreator;
+        platform = _platform;
         platformRate = _platformRate;
-        bussinessCreator = _bussinessCreator;
-        bussinessRate = _bussinessRate;
+        creator = _creator;
+        creatorRate = _creatorRate;
         
         erc20 = IERC20(_erc20);
         initMintPrice = _initMintPrice;
-        initBurnPrice = initMintPrice.mul(100 - _platformRate - _bussinessRate).div(100);
+        initBurnPrice = initMintPrice.mul(100 - _platformRate - _creatorRate).div(100);
         
         n = _n;
         d = _d;
@@ -64,151 +63,146 @@ contract Curve {
         virtualBalance = _virtualBalance;
         
         reserve = 0;
-        neolastics = new ERC1155Ex(); 
+        // erc1155 tokens based PASS
+        thePASS = new ERC1155Ex();       
     }
 
-    /*
-    通过ERC20铸造ERC1155，每次铸造都会生成一个独立ID的ERC1155
-    _balance: 铸造数量
-    _amount: 用户设定的最大可转让金额，当实际所需金额小于此值时，合约只会转实际的金额
-    _maxPriceFistNFT：本次铸造的第一个NFT的最大允许金额，防止front-running
-    返回值: token ID
+    /**@dev Each minting transation with erc20 tokens will produce a PASS/a batch of PASSes with a unique erc1155 token id.
+    *_balance: number of PASSes user want to mint.
+    *_amount: the maximum deposited amount set by the user. Any difference with the actual amount required will be returned.
+    *_maxPriceFirstPASS: the maximum allowed deposited amount for the first minted PASS to prevent front-running with least gas consumption.
+    *return: token ID
     */
-    function mint(uint256 _balance, uint256 _amount, uint256 _maxPriceFistNFT) public returns (uint256) {  
+    function mint(uint256 _balance, uint256 _amount, uint256 _maxPriceFirstPASS) public returns (uint256) {  
         require(address(erc20) != address(0), "C: erc20 is null.");
-        uint256 firstPrice = getCurrentPriceToMint(1);
-        require(_maxPriceFistNFT >= firstPrice, "C: price is too high.");
+        uint256 firstPrice = getCurrentCostToMint(1);
+        require(_maxPriceFirstPASS >= firstPrice, "C: Price exceeds slippage tolerance.");
 
-        uint256 mintPrice = getCurrentPriceToMint(_balance);
-        require(_amount >= mintPrice, "C: Not enough token sent");
-        erc20.transferFrom(msg.sender, address(this), mintPrice);
+        uint256 mintCost = getCurrentCostToMint(_balance);        
+        require(_amount >= mintCost, "C: Not enough tokens sent");
+        erc20.transferFrom(msg.sender, address(this), mintCost);
 
-        uint256 tokenId = neolastics.mint(msg.sender, _balance);
+        uint256 tokenId = thePASS.mint(msg.sender, _balance);    
 
-        uint256 platformProfit = mintPrice.mul(platformRate).div(100);
-        uint256 bussinessProfit = mintPrice.mul(bussinessRate).div(100);
-        erc20.transfer(platformCreator, platformProfit); 
-        erc20.transfer(bussinessCreator, bussinessProfit); 
-        
-        uint256 reserveCut = mintPrice.sub(platformProfit).sub(bussinessProfit);
+        uint256 platformProfit = mintCost.mul(platformRate).div(100);  
+        uint256 creatorProfit = mintCost.mul(creatorRate).div(100);    
+        erc20.transfer(platform, platformProfit); 
+        erc20.transfer(creator, creatorProfit);                         
+        // added reserve after subtracting platform and creator's profit
+        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit); 
         reserve = reserve.add(reserveCut);
 
-        emit Minted(tokenId, mintPrice, reserve, _balance);
-
-        return tokenId; // returns tokenId in case its useful to check it
+        emit Minted(tokenId, mintCost, reserve, _balance);
+        // returns tokenId in case it's useful to check it
+        return tokenId; 
     }
 
-    /*
-    用户销毁ERC1155, 获得相应的ERC20
-    _tokenId: 待销毁的ERC1155的ID
-    _balance: 销毁数量
+    /**@dev User burn PASS/PASSes to receive corresponding erc20 tokens.
+    *_tokenId: the token id of PASS/PASSes to be burned
+    *_balance: the number of PASS/PASSes to be burned
     */
     function burn(uint256 _tokenId, uint256 _balance) public {
         require(address(erc20) != address(0), "C: erc20 is null.");
-        uint256 burnPrice = getCurrentPriceToBurn(_balance);
+        uint256 burnReturn = getCurrentReturnToBurn(_balance);   
         
         // checks if allowed to burn
-        neolastics.burn(msg.sender, _tokenId, _balance);
+        thePASS.burn(msg.sender, _tokenId, _balance);        
 
-        reserve = reserve.sub(burnPrice);
-        erc20.transfer(msg.sender, burnPrice); 
+        reserve = reserve.sub(burnReturn);
+        erc20.transfer(msg.sender, burnReturn); 
 
-        emit Burned(_tokenId, burnPrice, reserve, _balance);
+        emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
     
-    /*
-    通过ETH铸造ERC1155，每次铸造都会生成一个独立ID的ERC1155
-    _balance: 铸造数量
-    _maxPriceFistNFT：本次铸造的第一个NFT的最大允许金额，防止front-running
-    返回值: token ID
+    /**@dev Each minting transation with ETH will produce a PASS/a batch of PASSes with a unique erc1155 token id.
+    *_balance: number of PASSes user want to mint
+    *_maxPriceFirstPASS: the maximum allowed deposited amount for the first minted PASS to prevent front-running with least gas consumption.
+    *return: token ID
     */
-    function mintEth(uint256 _balance, uint256 _maxPriceFistNFT) payable public returns (uint256) {    
+    function mintEth(uint256 _balance, uint256 _maxPriceFirstPASS) payable public returns (uint256) {    
         require(address(erc20) == address(0), "C: erc20 is NOT null.");    
-        uint256 firstPrice = getCurrentPriceToMint(1);
-        require(_maxPriceFistNFT >= firstPrice, "C: price is too high.");
+        uint256 firstPrice = getCurrentCostToMint(1);
+        require(_maxPriceFirstPASS >= firstPrice, "C: Price exceeds slippage tolerance.");
 
-        uint256 mintPrice = getCurrentPriceToMint(_balance);
-        require(msg.value >= mintPrice, "C: Not enough token sent");
-        if (msg.value.sub(mintPrice) > 0)
-            payable(msg.sender).transfer(msg.value.sub(mintPrice));
+        uint256 mintCost = getCurrentCostToMint(_balance);
+        require(msg.value >= mintCost, "C: Not enough ETH sent");
+        if (msg.value.sub(mintCost) > 0)
+            payable(msg.sender).transfer(msg.value.sub(mintCost));
 
-        uint256 tokenId = neolastics.mint(msg.sender, _balance);
+        uint256 tokenId = thePASS.mint(msg.sender, _balance);        
 
-        uint256 platformProfit = mintPrice.mul(platformRate).div(100);
-        uint256 bussinessProfit = mintPrice.mul(bussinessRate).div(100);
-        platformCreator.transfer(platformProfit); 
-        bussinessCreator.transfer(bussinessProfit); 
+        uint256 platformProfit = mintCost.mul(platformRate).div(100);      
+        uint256 creatorProfit = mintCost.mul(creatorRate).div(100);    
+        platform.transfer(platformProfit);                       
+        creator.transfer(creatorProfit);                        
         
-        uint256 reserveCut = mintPrice.sub(platformProfit).sub(bussinessProfit);
+        uint256 reserveCut = mintCost.sub(platformProfit).sub(bussinessProfit);
         reserve = reserve.add(reserveCut);
 
-        emit Minted(tokenId, mintPrice, reserve, _balance);
-
-        return tokenId; // returns tokenId in case its useful to check it
+        emit Minted(tokenId, mintCost, reserve, _balance);
+        // returns tokenId in case its useful to check it
+        return tokenId; 
     }
 
-    /*
-    用户销毁ERC1155，获得相应的ETH
-    _tokenId: 待销毁的ERC1155的ID
-    _balance: 销毁数量
+    /**@dev User burn a PASS/PASSes to receive corresponding ETH.
+    *_tokenId: token id of the PASS/PASSes to be burned
+    *_balance: number of PASS/PASSes to be burned
     */
     function burnEth(uint256 _tokenId, uint256 _balance) public {
         require(address(erc20) == address(0), "C: erc20 is NOT null.");
-        uint256 burnPrice = getCurrentPriceToBurn(_balance);
+        uint256 burnReturn = getCurrentReturnToBurn(_balance);
         
-        neolastics.burn(msg.sender, _tokenId, _balance);
+        thePASS.burn(msg.sender, _tokenId, _balance);
 
-        reserve = reserve.sub(burnPrice);
-        payable(msg.sender).transfer(burnPrice); 
+        reserve = reserve.sub(burnReturn);
+        payable(msg.sender).transfer(burnReturn); 
 
-        emit Burned(_tokenId, burnPrice, reserve, _balance);
+        emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
 
-    /*
-    获取一次铸造_balance个NFT的费用
-    _balance: 铸造NFT的数量
+    /**@dev Calculate the cost to mint a PASS/a batch of PASSes in one transaction
+    *_balance: number of PASS/PASSes to mint
+    *f(X) = m*[X^（n/d)]+v, m = initMintPrice-virtualBalance
     */
-    function getCurrentPriceToMint(uint256 _balance) public view returns (uint256) {
-        uint256 curSupply = getCurrentSupply() + virtualBalance;
-        uint256 totalMintPrice;
+    function getCurrentCostToMint(uint256 _balance) public view returns (uint256) {
+        uint256 curSupply = getCurrentSupply();
+        uint256 totalCost;
         if (bIntPower) {
             uint256 powerValue = n.div(d);
-            for (uint256 i = curSupply; i < curSupply + _balance; i++) {
-                totalMintPrice = totalMintPrice.add(initMintPrice.add(initMintPrice.mul(i**powerValue)));
+            for (uint256 i = curSupply + 1; i <= curSupply + _balance; i++) {
+                totalCost = totalCost.add(virtualBalance.add((initMintPrice-virtualBalance)).mul(i**powerValue)));
             }
         } else {
-            for (uint256 i = curSupply; i < curSupply + _balance; i++) {
+            for (uint256 i = curSupply+1; i <= curSupply + _balance; i++) {
                 (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
-                totalMintPrice = totalMintPrice.add(initMintPrice.add(initMintPrice.mul(p).div(q)));
+                totalCost = totalCost.add(virtualBalance.add((initMintPrice-virtualBalance).mul(p).div(q)));
             }
         }
-        return totalMintPrice;
+        return totalCost;
     }
 
-    /*
-    获取一次销毁_balance个NFT的费用
-    _balance: 销毁NFT的数量
+    /**@dev calculate the return from burning a PASS/a batch of PASSes in one transaction
+    *_balance: number of PASS/PASSes to be burned
     */
-    function getCurrentPriceToBurn(uint256 _balance) public virtual view returns (uint256) {
-        uint256 curSupply = getCurrentSupply() + virtualBalance;
-        uint256 curMaxIndex = curSupply - 1;
-        uint256 totalBurnPrice;
+    function getCurrentReturnToBurn(uint256 _balance) public virtual view returns (uint256) {  
+        uint256 curSupply = getCurrentSupply();
+        uint256 totalReturn;
         if (bIntPower) {
             uint256 powerValue = n.div(d);
-            for (uint256 i = curMaxIndex; i > curMaxIndex - _balance; i--) {
-                totalBurnPrice = totalBurnPrice.add(initBurnPrice.add(initBurnPrice.mul(i**powerValue)));
+            for (uint256 i = curSupply; i > curSupply - _balance; i--) {
+                totalReturn = totalReturn.add(virtualBalance.add((initMintPrice-virtualBalance).mul(i**powerValue)));
             }
         } else {
-            for (uint256 i = curMaxIndex; i > curMaxIndex - _balance; i--) {
+            for (uint256 i = curSupply; i > curSupply - _balance; i--) {
                 (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
-                totalBurnPrice = totalBurnPrice.add(initBurnPrice.add(initBurnPrice.mul(p).div(q)));
+                totalReturn = totalReturn.add((virtualBalance.add((initMintPrice-virtualBalance).mul(p).div(q))).mul(100 - _platformRate - _creatorRate).div(100));
             }
         }
-        return totalBurnPrice;
+        return totalReturn;
     }
 
-    // 获取当前存在的NFT数量
+    // get number of currently exisiting PASS/PASSes.
     function getCurrentSupply() public virtual view returns (uint256) {
-        return neolastics.totalSupply();
+        return thePASS.totalSupply();
     }
 }
