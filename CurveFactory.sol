@@ -5,9 +5,6 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/access/Ownable.sol"; 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./Curve.sol";
-//import "./CurveEth.sol";
-
-
 
 contract CurveFactory is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -35,18 +32,21 @@ contract CurveFactory is Ownable {
     // 创建curve
     // _creator: B端用户设置的手续费收取账号
     // _creatorRate: B端用户收取的手续费比例
-    // _virtualBalance: 虚拟流动性数量，譬如设置为10，表示铸造第1个NFT时的费用实际是按照第11个NFT的费用进行计价
+    // _virtualBalance: 虚拟流动性，即f(x)=m*x^n+v中的v的值
     // _erc20: 表示用户铸造NFT时需要支付哪种ERC20，如果此值为0x000...000, 表示用户需要通过支付ETH来铸造NFT
-    // _initMintPrice: 铸造NFT的价格系数，即f(x)=m*x^n+m中的m的值
-    // _n,_d: _n/_d即f(x)=m*x^n+m中n的值
+    // _initMintPrice: 铸造NFT的价格系数，即f(x)=m*x^n+v中的m的值
+    // _n,_d: _n/_d即f(x)=m*x^n+v中n的值
     function createCurve(address payable _creator, uint256 _creatorRate,
                          uint256 _virtualBalance, address _erc20, uint256 _initMintPrice,
-                         uint256 _n, uint256 _d) public {
+                         uint256 _n, uint256 _d, string memory _baseUri) public {
         require(_creatorRate <= 50 - platformRate, "C: bussinessRate is too high.");   
-        address curve = address(new Curve(platform, platformRate, _creator, _creatorRate, _virtualBalance, _erc20, _initMintPrice, _n, _d));
-        userCurves[msg.sender].add(curve);
-        curves.push(curve);
-        curveOwnerMap[curve] = msg.sender;
+        Curve curve = new Curve(_erc20, _virtualBalance, _initMintPrice, _n, _d, _baseUri);
+        curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
+        
+        address curveAddr = address(curve);
+        userCurves[msg.sender].add(curveAddr);
+        curves.push(curveAddr);
+        curveOwnerMap[curveAddr] = msg.sender;
     }
     
     // 获取已经创建好的curve总数

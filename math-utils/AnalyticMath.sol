@@ -2,15 +2,18 @@
 pragma solidity 0.8.6;
 
 import "./IntegralMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 interface IAnalyticMath {
     /**
       * @dev Compute (a / b) ^ (c / d)
     */
     function pow(uint256 a, uint256 b, uint256 c, uint256 d) external view returns (uint256, uint256);
+    function caculateIntPowerSum(uint256 power, uint256 n) pure external returns (uint256);
 }
 contract AnalyticMath {
     using IntegralMath for *;
+    using SafeMath for uint256;
 
     uint8 internal constant MIN_PRECISION = 32;
     uint8 internal constant MAX_PRECISION = 127;
@@ -44,6 +47,54 @@ contract AnalyticMath {
         (uint256 q, uint256 p) = mulDivExp(mulDivLog(FIXED_1, b, a), c, d);
         return (p, q);
     }}
+    
+    // 1: n^2/2 + n/2
+    // 2: (2*n^3 + 3*n^2 + n)/6   
+    // 3: (n^4 + 2*n^3 + n^2)/4                                     
+    // 4: (6*n^5 + 15*n^4 + 10*n^3 - n)/30      
+    // 5: (2*n^6 + 6*n^5 + 5*n^4 - n^2)/12                          
+    // 6: (6*n^7 + 21*n^6 + 21*n^5 - 7*n^3 + n)/42                  
+    // 7: (3*n^8 + 12*n^7 + 14*n^6 - 7*n^4 + 2*n^2)/24              
+    // 8: (10*n^9 + 45*n^8 + 60*n^7 - 42*n^5 + 20*n^3 - 3*n)/90     
+    // 9: (2*n^10 + 10*n^9 + 15*n^8 - 14*n^6 + 10*n^4 - 3*n^2)/20   
+    // 10: (6*n^11 + 33*n^10 + 55*n^9 - 66*n^7 + 66*n^5 - 33*n^3 + 5*n)/66  
+    function caculateIntPowerSum(uint256 power, uint256 n) pure public returns (uint256) {
+        if (n == 0) return 0;
+        if (n == 1) return 1;
+        if (power == 1) {
+            return n.mul(n).add(n).div(2);
+        }
+        if (power == 2) {
+            return (n**3).mul(2).add((n**2).mul(3)).add(n).div(6);
+        }
+        if (power == 3) {
+            return (n**4).add((n**3).mul(2)).add(n**2).div(4);
+        }
+        if (power == 4) {
+            return (n**5).mul(6).add((n**4).mul(15)).add((n**3).mul(10)).sub(n).div(30);
+        }
+        if (power == 5) {
+            return (n**6).mul(2).add((n**5).mul(6)).add((n**4).mul(5)).sub(n**2).div(12);
+        }
+        if (power == 6) {
+            return (n**7).mul(6).add((n**6).mul(21)).add((n**5).mul(21)).sub((n**3).mul(7)).add(n).div(42);
+        }
+        if (power == 7) {
+            return (n**8).mul(3).add((n**7).mul(12)).add((n**6).mul(14)).sub((n**4).mul(7)).add((n**2).mul(2)).div(24);
+        }
+        if (power == 8) {
+            uint256 v = (n**9).mul(10).add((n**8).mul(45)).add((n**7).mul(60));
+            return v.sub((n**5).mul(42)).add((n**3).mul(20)).sub(n.mul(3)).div(90);
+        }
+        if (power == 9) {
+            uint256 v =  (n**10).mul(2).add((n**9).mul(10)).add((n**8).mul(15));
+            return v.sub((n**6).mul(14)).add((n**4).mul(10)).sub((n**2).mul(3)).div(20);
+        }
+        if (power == 10) {
+            uint256 v = (n**11).mul(6).add((n**10).mul(33)).add((n**9).mul(55)).sub((n**7).mul(66));
+            return v.add((n**5).mul(66)).sub((n**3).mul(33)).add(n.mul(5)).div(66);
+        }
+    }
 
     /**
       * @dev Compute log(a / b)

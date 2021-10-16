@@ -13,15 +13,15 @@ contract ERC1155Ex is ERC1155 {
     uint256 public tokenId;
     mapping(address => EnumerableSet.UintSet) private userTokenIds;   // 记录用户拥有的tokenId
     
-    constructor () ERC1155("") {
+    constructor (string memory _baseUri) ERC1155(_baseUri) {
         curve = msg.sender;
     }
     
     // 给_to铸造ERC1155，数量_balance
     function mint(address _to, uint256 _balance) public returns(uint256) {
-        require(msg.sender == curve, "NFT1155: Minter is not the curve");
-        _mint(_to, tokenId, _balance, "");
+        require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
         tokenId += 1;
+        _mint(_to, tokenId, _balance, "");
         totalSupply += _balance;
         userTokenIds[_to].add(tokenId);
         return tokenId;
@@ -29,11 +29,25 @@ contract ERC1155Ex is ERC1155 {
     
     // 销毁_to拥有的ERC1155, ID为_tokenId，销毁数量为_balance
     function burn(address _to, uint256 _tokenId, uint256 _balance) public {
-        require(msg.sender == curve, "NFT1155: Minter is not the curve");
+        require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
         _burn(_to, _tokenId, _balance);
         totalSupply -= _balance;
         if (balanceOf(_to, _tokenId) == 0) {
-            userTokenIds[_to].remove(tokenId);
+            userTokenIds[_to].remove(_tokenId);
+        }
+    }
+    
+    // 批量销毁
+    function burnBatch(address _to, uint256[] memory _tokenIds, uint256[] memory _balances) public {
+        require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
+        
+        _burnBatch(_to, _tokenIds, _balances);
+        
+        for (uint256 i = 0; i < _tokenIds.length; i++) {
+            totalSupply -= _balances[i];
+            if (balanceOf(_to, _tokenIds[i]) == 0) {
+                userTokenIds[_to].remove(_tokenIds[i]);
+            }    
         }
     }
 
