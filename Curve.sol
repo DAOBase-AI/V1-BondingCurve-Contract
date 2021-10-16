@@ -25,9 +25,11 @@ contract Curve {
     
     address payable public platform;   // 平台费收取账号
     uint256 public platformRate;              // 平台费收取比例
+    uint256 public totalPlatformProfit;       // 平台费总收益
     
     address payable public creator;  // B端手续费收取账号
     uint256 public creatorRate;             // B端手续费收取比例
+    uint256 public totalCreatorProfit;       // B端手续费总收益
 
     ERC1155Ex public thePASS;                // ERC1155Ex合约
     
@@ -187,16 +189,12 @@ contract Curve {
         uint256 tokenId = thePASS.mint(msg.sender, _balance);
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
-        uint256 bussinessProfit = mintCost.mul(creatorRate).div(100);
-        if (bETH) {
-            platform.transfer(platformProfit); 
-            creator.transfer(bussinessProfit); 
-        } else {
-            erc20.safeTransfer(platform, platformProfit); 
-            erc20.safeTransfer(creator, bussinessProfit); 
-        }
+        uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
+
+        totalPlatformProfit = totalPlatformProfit.add(platformProfit);
+        totalCreatorProfit = totalCreatorProfit.add(creatorProfit);
         
-        uint256 reserveCut = mintCost.sub(platformProfit).sub(bussinessProfit);
+        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
         reserve = reserve.add(reserveCut);
 
         emit Minted(tokenId, mintCost, reserve, _balance);
@@ -293,5 +291,28 @@ contract Curve {
         return analyticMath.caculateIntPowerSum(_power, _endX).sub(analyticMath.caculateIntPowerSum(_power, _startX - 1));
     }
 
-    
+    function claimTotalProfit(bool bPlatform) public {
+        if (address(erc20) == address(0)) {
+            if (bPlatform) {
+                platform.transfer(totalPlatformProfit); 
+            }
+            else {
+                creator.transfer(totalCreatorProfit); 
+            }
+        } else {
+            if (bPlatform) {
+                erc20.safeTransfer(platform, totalPlatformProfit); 
+            }
+            else {
+                erc20.safeTransfer(creator, totalCreatorProfit); 
+            }
+        }
+
+        if (bPlatform) {
+            totalPlatformProfit = 0; 
+        }
+        else {
+            totalCreatorProfit = 0; 
+        }
+    }
 }
