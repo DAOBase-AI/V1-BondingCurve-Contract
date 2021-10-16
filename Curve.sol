@@ -187,16 +187,16 @@ contract Curve {
         uint256 tokenId = thePASS.mint(msg.sender, _balance);
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
-        uint256 bussinessProfit = mintCost.mul(creatorRate).div(100);
+        uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
         if (bETH) {
             platform.transfer(platformProfit); 
-            creator.transfer(bussinessProfit); 
+            creator.transfer(creatorProfit); 
         } else {
             erc20.safeTransfer(platform, platformProfit); 
-            erc20.safeTransfer(creator, bussinessProfit); 
+            erc20.safeTransfer(creator, creatorProfit); 
         }
         
-        uint256 reserveCut = mintCost.sub(platformProfit).sub(bussinessProfit);
+        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
         reserve = reserve.add(reserveCut);
 
         emit Minted(tokenId, mintCost, reserve, _balance);
