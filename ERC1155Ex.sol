@@ -4,22 +4,22 @@ pragma solidity 0.8.6;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 
-// 增强型ERC1155，记录了某用户拥有的所有token ID
+// extended ERC1155 which records all tokens IDs owned by a user
 contract ERC1155Ex is ERC1155 {
     using EnumerableSet for EnumerableSet.UintSet;
     
     address public curve;
-    uint256 public totalSupply;         // 总流通量
+    uint256 public totalSupply;         // total supply of erc1155 tokens
     uint256 public tokenId;
-    mapping(address => EnumerableSet.UintSet) private userTokenIds;   // 记录用户拥有的tokenId
+    mapping(address => EnumerableSet.UintSet) private userTokenIds;   // record all users' token IDs
     
     constructor (string memory _baseUri) ERC1155(_baseUri) {
         curve = msg.sender;
     }
     
-    // 给_to铸造ERC1155，数量_balance
+    // mint a batch of erc1155 tokens to address(_to)
     function mint(address _to, uint256 _balance) public returns(uint256) {
-        require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
+        require(msg.sender == curve, "ERC1155Ex: Minter is not the CURVE");
         tokenId += 1;
         _mint(_to, tokenId, _balance, "");
         totalSupply += _balance;
@@ -27,9 +27,13 @@ contract ERC1155Ex is ERC1155 {
         return tokenId;
     }
     
-    // 销毁_to拥有的ERC1155, ID为_tokenId，销毁数量为_balance
+    /**
+    * @dev burn erc1155 tokens owned by address(_to)
+    * _tokenId: token id of erc1155 tokens to burn
+    * _balance: number of erc1155 tokens to burn
+    */
     function burn(address _to, uint256 _tokenId, uint256 _balance) public {
-        require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
+        require(msg.sender == curve, "ERC1155Ex: minter is not the curve");
         _burn(_to, _tokenId, _balance);
         totalSupply -= _balance;
         if (balanceOf(_to, _tokenId) == 0) {
@@ -37,7 +41,7 @@ contract ERC1155Ex is ERC1155 {
         }
     }
     
-    // 批量销毁
+    // burn a batch of erc1155 tokens
     function burnBatch(address _to, uint256[] memory _tokenIds, uint256[] memory _balances) public {
         require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
         
@@ -51,12 +55,12 @@ contract ERC1155Ex is ERC1155 {
         }
     }
 
-    // 获取某个用户拥有的ERC1155 token ID总数
+    // Get the total number of ERC1155 token IDs owned by a user
     function getUserTokenIdNumber(address _userAddr) public view returns(uint256) {
         return userTokenIds[_userAddr].length();
     }
     
-    // 通过用户地址和序号获取tokenId
+    // Get token IDs by user address and index number
     function getUserTokenId(address _userAddr, uint256 _index) public view returns(uint256) {
         return userTokenIds[_userAddr].at(_index);
     }
