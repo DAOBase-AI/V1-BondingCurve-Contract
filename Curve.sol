@@ -94,7 +94,7 @@ contract Curve {
     */
     function mint(uint256 _balance, uint256 _amount, uint256 _maxPriceFirstPASS) public returns (uint256) {  
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
-        uint256 firstPrice = getCurrentCostToMint(1);
+        uint256 firstPrice = _getCurrentCostToMint(1);
         require(_maxPriceFirstPASS >= firstPrice, "Curve: price exceeds slippage tolerance.");
 
         return _mint(_balance, _amount, false);
@@ -151,7 +151,7 @@ contract Curve {
     */
     function mintEth(uint256 _balance, uint256 _maxPriceFirstPASS) payable public returns (uint256) {    
         require(address(erc20) == address(0), "Curve: erc20 address is NOT null.");    
-        uint256 firstPrice = getCurrentCostToMint(1);
+        uint256 firstPrice = _getCurrentCostToMint(1);
         require(_maxPriceFirstPASS >= firstPrice, "Curve: price is too high.");
 
         return _mint(_balance, msg.value, true);
@@ -182,7 +182,7 @@ contract Curve {
     
     // internal function to mint PASS
     function _mint(uint256 _balance, uint256 _amount, bool bETH) private returns (uint256) {
-        uint256 mintCost = getCurrentCostToMint(_balance);
+        uint256 mintCost = _getCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough tokens sent.");
         // For eth, any excess amount will be returned. For erc20, only required amount will be transferred
         if (bETH) {
@@ -213,10 +213,10 @@ contract Curve {
     }
 
     /**
-    * @dev calculate the cost of minting _balance PASSes in a transaction
+    * @dev internal function to calculate the cost of minting _balance PASSes in a transaction
     * _balance: number of PASS/PASSes to mint
     */
-    function getCurrentCostToMint(uint256 _balance) public view returns (uint256) {
+    function _getCurrentCostToMint(uint256 _balance) private returns (uint256) {
         uint256 curStartX = getCurrentSupply() + 1;     // fist PASS to mint
         uint256 totalCost;
         if (intPower > 0) {
@@ -241,6 +241,29 @@ contract Curve {
                 } else {
                     totalCost = totalCost.add(decPowerCache[i]);
                 }
+            }
+        }
+        return totalCost;
+    }
+    
+    // external view function to query the current cost to mint a PASS/PASSes
+    function getCurrentCostToMint(uint256 _balance) public view returns (uint256) {
+        uint256 curStartX = getCurrentSupply() + 1;
+        uint256 totalCost;
+        if (intPower > 0) {
+            if (intPower <= 10) {
+                uint256 intervalSum = caculateIntervalSum(intPower, curStartX, curStartX + _balance - 1);
+                totalCost = initMintPrice.mul(intervalSum).add(virtualBalance.mul(_balance));
+            } else {
+                for (uint256 i = curStartX; i < curStartX + _balance; i++) {
+                    totalCost = totalCost.add(initMintPrice.mul(i**intPower).add(virtualBalance));
+                }
+            }
+        } else {
+            for (uint256 i = curStartX; i < curStartX + _balance; i++) {
+                (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
+                uint256 cost = virtualBalance.add(initMintPrice.mul(p).div(q));
+                totalCost = totalCost.add(cost);
             }
         }
         return totalCost;
@@ -278,7 +301,7 @@ contract Curve {
     function getCurrentSupply() public view returns (uint256) {
         return thePASS.totalSupply();
     }
-    // Bernoulli's formula for calculating the sum of intervals between the two supplies
+    // Bernoulli's formula for calculating the sum of intervals between the two reserves
     function caculateIntervalSum(uint256 _power, uint256 _startX, uint256 _endX) public view returns(uint256) {
         return analyticMath.caculateIntPowerSum(_power, _endX).sub(analyticMath.caculateIntPowerSum(_power, _startX - 1));
     }
