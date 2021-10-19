@@ -172,6 +172,24 @@ contract Curve {
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
+
+    function burnBatchETH(uint256[] memory _tokenIds, uint256[] memory _balances) public {
+        require(address(erc20) == address(0), "C: erc20 is null.");
+        require(_tokenIds.length == _balances.length, "C: _tokenIds and _balances length mismatch");
+        uint256 totalBalance;
+        for(uint256 i = 0; i < _balances.length; i++) {
+            totalBalance += _balances[i];
+        }
+        
+        uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
+        
+        thePASS.burnBatch(msg.sender, _tokenIds, _balances);
+
+        reserve = reserve.sub(burnReturn);
+        payable(msg.sender).transfer(burnReturn); 
+
+        emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
+    }
     
     /*
     铸造ERC1155的底层函数
@@ -206,7 +224,7 @@ contract Curve {
     获取一次铸造_balance个NFT的费用，公式f(x)=m*x^n+v
     _balance: 铸造NFT的数量
     */
-    function caculateCurrentCostToMint(uint256 _balance) public returns (uint256) {
+    function caculateCurrentCostToMint(uint256 _balance) internal returns (uint256) {
         uint256 curStartX = getCurrentSupply() + 1;
         uint256 totalCost;
         if (intPower > 0) {
