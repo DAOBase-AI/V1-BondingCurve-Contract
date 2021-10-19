@@ -14,7 +14,7 @@ contract Curve {
     using SafeERC20 for IERC20;
 
     IERC20 public erc20;          // 铸造NFT需要消耗的ERC20
-    uint256 public initMintPrice; // 初始铸造价格
+    uint256 public m; // 初始铸造价格
     uint256 public n;             // 幂分子
     uint256 public d;             // 幂分母
     uint256 public intPower;         // 幂为整数时的值
@@ -43,13 +43,13 @@ contract Curve {
     构造函数
     _virtualBalance: 虚拟流动性，即f(x)=m*x^n+v中的v的值
     _erc20: 表示用户铸造NFT时需要支付哪种ERC20，如果此值为0x000...000, 表示用户需要通过支付ETH来铸造NFT
-    _initMintPrice: 铸造NFT的价格系数，即f(x)=m*x^n+v中的m的值
+    _m: 铸造NFT的价格系数，即f(x)=m*x^n+v中的m的值
     _n,_d: _n/_d即f(x)=m*x^n+v中n的值
     */
-    constructor (address _erc20, uint256 _virtualBalance, uint256 _initMintPrice,
+    constructor (address _erc20, uint256 _virtualBalance, uint256 _m,
                  uint256 _n, uint256 _d, string memory _baseUri) {
         erc20 = IERC20(_erc20);
-        initMintPrice = _initMintPrice;
+        m = _m;
         
         n = _n;
         d = _d;
@@ -230,17 +230,17 @@ contract Curve {
         if (intPower > 0) {
             if (intPower <= 10) {
                 uint256 intervalSum = caculateIntervalSum(intPower, curStartX, curStartX + _balance - 1);
-                totalCost = initMintPrice.mul(intervalSum).add(virtualBalance.mul(_balance));
+                totalCost = m.mul(intervalSum).add(virtualBalance.mul(_balance));
             } else {
                 for (uint256 i = curStartX; i < curStartX + _balance; i++) {
-                    totalCost = totalCost.add(initMintPrice.mul(i**intPower).add(virtualBalance));
+                    totalCost = totalCost.add(m.mul(i**intPower).add(virtualBalance));
                 }
             }
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
                 if (decPowerCache[i] == 0) {
                     (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
-                    uint256 cost = virtualBalance.add(initMintPrice.mul(p).div(q));
+                    uint256 cost = virtualBalance.add(m.mul(p).div(q));
                     totalCost = totalCost.add(cost);
                     decPowerCache[i] = cost;
                 } else {
@@ -257,16 +257,16 @@ contract Curve {
         if (intPower > 0) {
             if (intPower <= 10) {
                 uint256 intervalSum = caculateIntervalSum(intPower, curStartX, curStartX + _balance - 1);
-                totalCost = initMintPrice.mul(intervalSum).add(virtualBalance.mul(_balance));
+                totalCost = m.mul(intervalSum).add(virtualBalance.mul(_balance));
             } else {
                 for (uint256 i = curStartX; i < curStartX + _balance; i++) {
-                    totalCost = totalCost.add(initMintPrice.mul(i**intPower).add(virtualBalance));
+                    totalCost = totalCost.add(m.mul(i**intPower).add(virtualBalance));
                 }
             }
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
                 (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
-                uint256 cost = virtualBalance.add(initMintPrice.mul(p).div(q));
+                uint256 cost = virtualBalance.add(m.mul(p).div(q));
                 totalCost = totalCost.add(cost);
             }
         }
@@ -285,10 +285,10 @@ contract Curve {
         if (intPower > 0) {
             if (intPower <= 10) {
                 uint256 intervalSum = caculateIntervalSum(intPower, curEndX - _balance + 1, curEndX);
-                totalReturn = initMintPrice.mul(intervalSum).add(virtualBalance.mul(_balance));
+                totalReturn = m.mul(intervalSum).add(virtualBalance.mul(_balance));
             } else {
                 for (uint256 i = curEndX; i > curEndX - _balance; i--) {
-                    totalReturn = totalReturn.add(initMintPrice.mul(i**intPower).add(virtualBalance));
+                    totalReturn = totalReturn.add(m.mul(i**intPower).add(virtualBalance));
                 }
             }
         } else {
