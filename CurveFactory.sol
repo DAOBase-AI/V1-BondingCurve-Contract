@@ -9,57 +9,59 @@ import "./Curve.sol";
 contract CurveFactory is Ownable {
     using EnumerableSet for EnumerableSet.AddressSet;
     
-    address payable public platform;
-    uint256 public platformRate = 1;
-    address[] public curves;
-    mapping(address => address) public curveOwnerMap;
-    mapping(address => EnumerableSet.AddressSet) private userCurves;
+    address payable public platform;        // platform commision account
+    uint256 public platformRate = 1;        // % of total minting cost as platform commission
+    address[] public curves;                // array of created curve address
+    mapping(address => address) public curveOwnerMap;   // mapping curve address with corresponding owner address
+    mapping(address => EnumerableSet.AddressSet) private userCurves;   // enumerable array of curve owner address
     
     constructor() {
     }
     
-    // 设置平台手续费收取账号
+    // set up the platform commission account
     function setPlatform(address payable _platform) public onlyOwner {
         platform = _platform;
     }
 
-    // 设置平台手续费比例，只能由owner操作
-    // _platformRate: 百分比，1表示1%
+    // set the platform commission rate, only operable by contract owner, _platformRate is in pph
     function setPlatformRate(uint256 _platformRate) public onlyOwner {
         platformRate = _platformRate;
     }
     
-    // 创建curve
-    // _creator: B端用户设置的手续费收取账号
-    // _creatorRate: B端用户收取的手续费比例
-    // _virtualBalance: 虚拟流动性，即f(x)=m*x^n+v中的v的值
-    // _erc20: 表示用户铸造NFT时需要支付哪种ERC20，如果此值为0x000...000, 表示用户需要通过支付ETH来铸造NFT
-    // _m: 铸造NFT的价格系数，即f(x)=m*x^n+v中的m的值
-    // _n,_d: _n/_d即f(x)=m*x^n+v中n的值
+    /**
+    * @dev creation of bonding curve with formular: f(x)=m*(x^N)+v
+    * _creator: creator's commission account
+    * _creatorRate: creator's commission rate
+    * _initMintPrice: f(1) = m + v, the first PASS minting price
+    * _erc20: collateral token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as ETH instead of erc20 token
+    * _m: m, slope of curve
+    * _n,_d: _n/_d = N, exponent of the curve
+    * _baseUri: base URI for PASS metadata
+    */
     function createCurve(address payable _creator, uint256 _creatorRate,
-                         uint256 _virtualBalance, address _erc20, uint256 _m,
+                         uint256 _initMintPrice, address _erc20, uint256 _m,
                          uint256 _n, uint256 _d, string memory _baseUri) public {
-        require(_creatorRate <= 50 - platformRate, "C: bussinessRate is too high.");   
-        Curve curve = new Curve(_erc20, _virtualBalance, _m, _n, _d, _baseUri);
+        require(_creatorRate <= 50 - platformRate, "Curve: creator's commission rate is too high.");   
+        Curve curve = new Curve(_erc20, _initMintPrice, _m, _n, _d, _baseUri);
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
         
-        address curveAddr = address(curve);
-        userCurves[msg.sender].add(curveAddr);
-        curves.push(curveAddr);
-        curveOwnerMap[curveAddr] = msg.sender;
+        address curveAddr = address(curve);         // get contract address of created curve
+        userCurves[msg.sender].add(curveAddr);      // accumulate the number of curves created by a user
+        curves.push(curveAddr);                     // add newly created curve address into the array of curve address
+        curveOwnerMap[curveAddr] = msg.sender;      // binding created curve address with corresponding owner address
     }
     
-    // 获取已经创建好的curve总数
+    // total number of curves created via factory account
     function getCurveTotalNumber() public view returns(uint256) {
         return curves.length;
     }
     
-    // 获取某个用户已经创建好的curve总数
+    // total number of curves created by a user
     function getUserCurveNumber(address _userAddr) public view returns(uint256) {
         return userCurves[_userAddr].length();
     }
     
-    // 通过用户地址和序号获取curve地址
+    // get the curve address by user address and index
     function getUserCurve(address _userAddr, uint256 _index) public view returns(address) {
         return userCurves[_userAddr].at(_index);
     }
