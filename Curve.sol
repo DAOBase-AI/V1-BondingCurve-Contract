@@ -11,8 +11,8 @@ import "./math-utils/AnalyticMath.sol";
 /**
 * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
 * PASS is orgnization's erc1155 token on curve 
-* erc20 or eth is contribution token on curve 
-* Users can mint PASS via deposting erc20 contribution token into curve
+* erc20 or eth is collateral token on curve 
+* Users can mint PASS via deposting erc20 collateral token into curve
 * thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
 * f(x) = PASS Price when total supply of PASS is x
 * m, slope of bonding curve
@@ -25,7 +25,7 @@ contract Curve {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    IERC20 public erc20;          // contribution token on bonding curve
+    IERC20 public erc20;          // collateral token on bonding curve
     uint256 public m;             // slope of bonding curve
     uint256 public n;             // numerator of exponent in curve power function
     uint256 public d;             // denominator of exponent in curve power function
@@ -33,7 +33,7 @@ contract Curve {
     uint256 public virtualBalance; // vitual balance for setting a reasonable initial price
     
     mapping(uint256 => uint256) public decPowerCache;   // cache of power function calculation result when exponent is decimal，n => cost
-    uint256 public reserve;        // reserve of contribution tokens stored in bonding curve AMM pool
+    uint256 public reserve;        // reserve of collateral tokens stored in bonding curve AMM pool
     
     address payable public platform;   // thePass platform's commission account
     uint256 public platformRate;       // thePass platform's commission rate in pph
@@ -53,12 +53,12 @@ contract Curve {
 
     /**
     * @dev constrcutor of bonding curve with formular: f(x)=m*(x^N)+v
-    * _erc20: contribution token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as eth instead of erc20 token
+    * _erc20: collateral token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as eth instead of erc20 token
     * _initMintPrice: f(1) = m + v, the first PASS minting price
     * _m: m, slope of curve
     * _virtualBalance: v = f(1) - _m, virtual balance, displacement of curve
     * _n,_d: _n/_d = N, exponent of the curve
-    * reserve: reserve of contribution tokens stored in bonding curve AMM pool, start with 0
+    * reserve: reserve of collateral tokens stored in bonding curve AMM pool, start with 0
     */
     constructor (address _erc20, uint256 _initMintPrice, uint256 _m,
                  uint256 _n, uint256 _d, string memory _baseUri) {
@@ -87,7 +87,7 @@ contract Curve {
     }
 
     /**
-    * @dev each PASS minting transaction by depositing contribution erc20 tokens will create a new erc1155 token id sequentially
+    * @dev each PASS minting transaction by depositing collateral erc20 tokens will create a new erc1155 token id sequentially
     * _balance: number of PASSes user want to mint
     * _amount: the maximum deposited amount set by the user
     * _maxPriceFistNFT: the maximum price for the first mintable PASS to prevent front-running with least gas consumption
@@ -109,7 +109,7 @@ contract Curve {
     }
     
     /**
-    * @dev user burn PASS/PASSes to receive corresponding contribution tokens
+    * @dev user burn PASS/PASSes to receive corresponding collateral tokens
     * _tokenId: the token id of PASS/PASSes to burn
     * _balance: the number of PASS/PASSes to burn
     */
@@ -148,7 +148,7 @@ contract Curve {
     
     
     /**
-    * @dev each PASS minting transaction by depositing contribution ETHs will create a new erc1155 token id sequentially
+    * @dev each PASS minting transaction by depositing ETHs will create a new erc1155 token id sequentially
     * _balance: number of PASSes user want to mint
     * _maxPriceFirstPASS: the maximum price for the first mintable PASS to prevent front-running with least gas consumption
     * return: token ID
@@ -168,7 +168,7 @@ contract Curve {
     }
 
     /**
-    * @dev user burn PASS/PASSes to receive corresponding contribution ETHs
+    * @dev user burn PASS/PASSes to receive corresponding ETHs
     * _tokenId: the token id of PASS/PASSes to burn
     * _balance: the number of PASS/PASSes to burn
     */
