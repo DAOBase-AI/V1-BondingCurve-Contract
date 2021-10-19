@@ -36,11 +36,13 @@ contract Curve {
     uint256 public reserve;        // reserve of contribution tokens stored in bonding curve AMM pool
     
     address payable public platform;   // thePass platform's commission account
-    uint256 public platformRate;       // thePass platform's commission rate in pph  
+    uint256 public platformRate;       // thePass platform's commission rate in pph
+    uint256 public totalPlatformProfit;       // thePass platform's total commission profits
     
     address payable public creator;    // creator's commission account
     uint256 public creatorRate;        // creator's commission rate in pph
-
+    uint256 public totalCreatorProfit;       // creator's total commission profits
+    
     ERC1155Ex public thePASS;          // thePASS extened ERC1155 contract
     
     IAnalyticMath public analyticMath = IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8);  // Mathmatical method for calculating power function
@@ -51,25 +53,25 @@ contract Curve {
 
     /**
     * @dev constrcutor of bonding curve with formular: f(x)=m*(x^N)+v
+    * _erc20: contribution token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as eth instead of erc20 token
     * _initMintPrice: f(1) = m + v, the first PASS minting price
     * _m: m, slope of curve
     * _virtualBalance: v = f(1) - _m, virtual balance, displacement of curve
     * _n,_d: _n/_d = N, exponent of the curve
-    * _erc20: contribution token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as eth instead of erc20 token
     * reserve: reserve of contribution tokens stored in bonding curve AMM pool, start with 0
     */
-    constructor (address _erc20, uint256 _virtualBalance, uint256 _m,
+    constructor (address _erc20, uint256 _initMintPrice, uint256 _m,
                  uint256 _n, uint256 _d, string memory _baseUri) {
         erc20 = IERC20(_erc20);
-        m = _m;
-        
+        m = _m;        
         n = _n;
-        d = _d;
+
         if (_n.div(_d).mul(_d) == _n) {
             intPower = _n.div(_d);
         }
-        virtualBalance = _virtualBalance;
+        else { d = _d; }
         
+        virtualBalance = _initMintPrice - _m;  
         reserve = 0;
         thePASS = new ERC1155Ex(_baseUri); 
     }
@@ -77,7 +79,7 @@ contract Curve {
     // @creator commission account and rate initilization
     function setFeeParameters(address payable _platform, uint256 _platformRate, 
                               address payable _creator, uint256 _createRate) public {
-        require(platform == address(0) && creator == address(0), "Curve: fee inited.");
+        require(platform == address(0) && creator == address(0), "Curve: commission account and rate cannot be modified.");
         platform = _platform;
         platformRate = _platformRate;
         creator = _creator;
@@ -92,16 +94,16 @@ contract Curve {
     * return: token id
     */
     function mint(uint256 _balance, uint256 _amount, uint256 _maxPriceFirstPASS) public returns (uint256) {  
-        require(address(erc20) != address(0), "Curve: erc20 is null.");
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 firstPrice = caculateCurrentCostToMint(1);
-        require(_maxPriceFirstPASS >= firstPrice, "Curve: price is too high.");
+        require(_maxPriceFirstPASS >= firstPrice, "Curve: price exceeds slippage tolerance.");
 
         return _mint(_balance, _amount, false);
     }
 
     // for small amount of PASS minting, it will be unceessary to check the maximum price for the fist mintable PASS
     function mint(uint256 _balance, uint256 _amount) public returns (uint256) {  
-        require(address(erc20) != address(0), "Curve: erc20 is null.");
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
         
         return _mint(_balance, _amount, false);
     }
@@ -112,7 +114,7 @@ contract Curve {
     * _balance: the number of PASS/PASSes to burn
     */
     function burn(uint256 _tokenId, uint256 _balance) public {
-        require(address(erc20) != address(0), "Curve: erc20 is null.");
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
         
         // checks if allowed to burn
@@ -126,8 +128,8 @@ contract Curve {
     
     // allow user to burn batches of PASSes with a set of token id
     function burnBatch(uint256[] memory _tokenIds, uint256[] memory _balances) public {
-        require(address(erc20) != address(0), "Curve: erc20 is null.");
-        require(_tokenIds.length == _balances.length, "Curve: _tokenIds and _balances length mismatch");
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
+        require(_tokenIds.length == _balances.length, "Curve: _tokenIds and _balances length mismatch.");
         uint256 totalBalance;
         for(uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
@@ -154,7 +156,7 @@ contract Curve {
     function mintEth(uint256 _balance, uint256 _maxPriceFirstPASS) payable public returns (uint256) {    
         require(address(erc20) == address(0), "Curve: erc20 address is NOT null.");    
         uint256 firstPrice = caculateCurrentCostToMint(1);
-        require(_maxPriceFirstPASS >= firstPrice, "Curve: price is too high.");
+        require(_maxPriceFirstPASS >= firstPrice, "Curve: price exceeds slippage tolerance.");
 
         return _mint(_balance, msg.value, true);
     }
@@ -181,7 +183,7 @@ contract Curve {
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
-
+    // allow user to burn batches of PASSes with a set of token id
     function burnBatchETH(uint256[] memory _tokenIds, uint256[] memory _balances) public {
         require(address(erc20) == address(0), "Curve: erc20 address is null.");
         require(_tokenIds.length == _balances.length, "Curve: _tokenIds and _balances length mismatch");
@@ -203,7 +205,7 @@ contract Curve {
     // internal function to mint PASS
     function _mint(uint256 _balance, uint256 _amount, bool bETH) private returns (uint256) {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
-        require(_amount >= mintCost, "Curve: Not enough token sent");
+        require(_amount >= mintCost, "Curve: not enough token sent");
         if (bETH) {
             if (_amount.sub(mintCost) > 0)
                 payable(msg.sender).transfer(_amount.sub(mintCost));
@@ -317,7 +319,8 @@ contract Curve {
     function caculateIntervalSum(uint256 _power, uint256 _startX, uint256 _endX) public view returns(uint256) {
         return analyticMath.caculateIntPowerSum(_power, _endX).sub(analyticMath.caculateIntPowerSum(_power, _startX - 1));
     }
-
+    
+    // only thePASS platform and creator can claim their corresponding commission profits
     function claimTotalProfit(bool bPlatform) public {
         if (address(erc20) == address(0)) {
             if (bPlatform) {
