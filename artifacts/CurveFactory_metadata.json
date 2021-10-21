@@ -16,6 +16,25 @@
 					{
 						"indexed": true,
 						"internalType": "address",
+						"name": "owner",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "curveAddr",
+						"type": "address"
+					}
+				],
+				"name": "CurveCreated",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
 						"name": "previousOwner",
 						"type": "address"
 					},
@@ -33,17 +52,17 @@
 				"inputs": [
 					{
 						"internalType": "address payable",
-						"name": "_bussinessCreator",
+						"name": "_creator",
 						"type": "address"
 					},
 					{
 						"internalType": "uint256",
-						"name": "_bussinessRate",
+						"name": "_creatorRate",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "_virtualBalance",
+						"name": "_initMintPrice",
 						"type": "uint256"
 					},
 					{
@@ -53,7 +72,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "_initMintPrice",
+						"name": "_m",
 						"type": "uint256"
 					},
 					{
@@ -65,24 +84,16 @@
 						"internalType": "uint256",
 						"name": "_d",
 						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "_baseUri",
+						"type": "string"
 					}
 				],
 				"name": "createCurve",
 				"outputs": [],
 				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "creator",
-				"outputs": [
-					{
-						"internalType": "address payable",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -194,7 +205,20 @@
 			},
 			{
 				"inputs": [],
-				"name": "platformProfitRate",
+				"name": "platform",
+				"outputs": [
+					{
+						"internalType": "address payable",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "platformRate",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -216,11 +240,11 @@
 				"inputs": [
 					{
 						"internalType": "address payable",
-						"name": "_creator",
+						"name": "_platform",
 						"type": "address"
 					}
 				],
-				"name": "setCreator",
+				"name": "setPlatform",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -229,11 +253,11 @@
 				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "_platformProfitRate",
+						"name": "_platformRate",
 						"type": "uint256"
 					}
 				],
-				"name": "setPlatformProfitRate",
+				"name": "setPlatformRate",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -255,6 +279,9 @@
 		"devdoc": {
 			"kind": "dev",
 			"methods": {
+				"createCurve(address,uint256,uint256,address,uint256,uint256,uint256,string)": {
+					"details": "creation of bonding curve with formular: f(x)=m*(x^N)+v _creator: creator's commission account _creatorRate: creator's commission rate _initMintPrice: f(1) = m + v, the first PASS minting price _erc20: collateral token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as ETH instead of erc20 token _m: m, slope of curve _n,_d: _n/_d = N, exponent of the curve _baseUri: base URI for PASS metadata"
+				},
 				"owner()": {
 					"details": "Returns the address of the current owner."
 				},
@@ -275,7 +302,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"NFTBondingCurve/CurveFactory.sol": "CurveFactory"
+			"NFTBondingCurve/CurveFactoryClaimVer.sol": "CurveFactory"
 		},
 		"evmVersion": "berlin",
 		"libraries": {},
@@ -337,6 +364,14 @@
 				"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL"
 			]
 		},
+		"@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
+			"keccak256": "0x02348b2e4b9f3200c7e3907c5c2661643a6d8520e9f79939fbb9b4005a54894d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d41d627f4ef9c6006df8c2d01227d3cf4a6c3359b5704c629d88933272eecadd",
+				"dweb:/ipfs/QmYDo7MvMsvuDxuJZ9RC9zFganS3Tm8RYzSmBP5qSmJfuY"
+			]
+		},
 		"@openzeppelin/contracts/utils/Address.sol": {
 			"keccak256": "0x3336baae5cf23e94274d75336e2d412193be508504aee185e61dc7d58cd05c8a",
 			"license": "MIT",
@@ -385,36 +420,36 @@
 				"dweb:/ipfs/QmXN79ZS3btSrPhiMBWtWmdwaWKjYTaAYpVMt5QHvwwKMw"
 			]
 		},
-		"NFTBondingCurve/Curve.sol": {
-			"keccak256": "0xa4b8b035f0837e116849d18ccf923031d62ea9c4ba501b341ea06c147deebc87",
+		"NFTBondingCurve/CurveClaimVer.sol": {
+			"keccak256": "0x87116e0451c0e238eda7dcef3233c60cf4a0492819fbc72da47370e93d5af284",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://07ec9ffc1a0a28f4781ad321c14437575e059fd5fc4b58c67fcd4adae5d809fe",
-				"dweb:/ipfs/Qmd2io5MjVDoP1XVH2B9WpmqFRy7d5bD3trzj35GGmE4Dg"
+				"bzz-raw://bd1026f6c6c93801ae9641bfd202bc34ffb1dec1015408044a8eceee55f65a14",
+				"dweb:/ipfs/QmVCvGWBaEWT2YoF5YECzRKqSNqPUQbuydqd7UJxJ9V2kJ"
 			]
 		},
-		"NFTBondingCurve/CurveFactory.sol": {
-			"keccak256": "0xd00ac8b9d866c334743f2914caf9028733bf724607b9ccc122f6df957cfb4da5",
+		"NFTBondingCurve/CurveFactoryClaimVer.sol": {
+			"keccak256": "0xbe4b1ec774c97b3017737863455946ef0782cb8759bb10df5a2adb4b6d64758e",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://af302c807e795104349df85339484121610e3e1b99fa4eb03c40b6cb91de9614",
-				"dweb:/ipfs/Qmaw5XACq4tQ7r9yS33JYi6psHZEyFM9BdDg4PK9ixs3Uc"
+				"bzz-raw://ba5f5a77a05ab8f7dcc258bdaa0ce8c3966b8332a53b123af99acb85bfd6c9c7",
+				"dweb:/ipfs/Qmc4CVHbp4BeLQpvLxihDRUj4NSC8KXhQkYTBKus6a161x"
 			]
 		},
 		"NFTBondingCurve/ERC1155Ex.sol": {
-			"keccak256": "0xf8e7b38584399b0cd39aae27c040d46da0f585e7d0bb7a4baefedbc4b82ce4af",
+			"keccak256": "0xd4ffe57be953790458b816dde6bd65c45826d67bb00891ad5f4661081b04881a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9b79c2e59a77f9eb3980752053990ed85673a08aa4baeeec467e8d7b88d13825",
-				"dweb:/ipfs/QmY6BZqq3YG7H7jB5UVHgpJ3KXTCNwWkEdQAqhNXyjaAsL"
+				"bzz-raw://4344099103fe6dbb70c53dc8fbe016b6107d0939fe5e714f47c9562a5244af56",
+				"dweb:/ipfs/QmTJmPpzTG2Vy8kRZhVh9V1KuL73Y939qZkqxxoJLaYtJi"
 			]
 		},
 		"NFTBondingCurve/math-utils/AnalyticMath.sol": {
-			"keccak256": "0xccb42b7b7c1331377fc6582bd8f8fb9843cb8d03375386169b2eef725d6d5ac0",
+			"keccak256": "0xa43df36cddf64aceed0841c8b223a089cbeda26c700f2076234565e401c46be4",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://09f41cf65d37c0cc8ecae267abf403722083568a886241f931c0a61a2ed6d944",
-				"dweb:/ipfs/QmYyR1Qc4wVbAD2sPbS6fN38mY16aRXJ9hhxwR6iPo6NTH"
+				"bzz-raw://7e39ead57bbe3cfd1fc6b9f5a051e87491770e5c0a9deeba8fcc8ac07ae64cc1",
+				"dweb:/ipfs/QmVdscduD1xK7gBGu5k1jhJqrYQbDujKo1rigBzruyAxCp"
 			]
 		},
 		"NFTBondingCurve/math-utils/IntegralMath.sol": {

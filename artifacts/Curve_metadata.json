@@ -8,31 +8,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address payable",
-						"name": "_platformCreator",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_platformRate",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address payable",
-						"name": "_bussinessCreator",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_bussinessRate",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_virtualBalance",
-						"type": "uint256"
-					},
-					{
 						"internalType": "address",
 						"name": "_erc20",
 						"type": "address"
@@ -44,6 +19,11 @@
 					},
 					{
 						"internalType": "uint256",
+						"name": "_m",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
 						"name": "_n",
 						"type": "uint256"
 					},
@@ -51,10 +31,46 @@
 						"internalType": "uint256",
 						"name": "_d",
 						"type": "uint256"
+					},
+					{
+						"internalType": "string",
+						"name": "_baseUri",
+						"type": "string"
 					}
 				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": false,
+						"internalType": "uint256[]",
+						"name": "tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256[]",
+						"name": "balances",
+						"type": "uint256[]"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "returnAmount",
+						"type": "uint256"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "reserveAfterBurn",
+						"type": "uint256"
+					}
+				],
+				"name": "BatchBurned",
+				"type": "event"
 			},
 			{
 				"anonymous": false,
@@ -68,7 +84,7 @@
 					{
 						"indexed": true,
 						"internalType": "uint256",
-						"name": "priceReceived",
+						"name": "returnAmount",
 						"type": "uint256"
 					},
 					{
@@ -99,7 +115,7 @@
 					{
 						"indexed": true,
 						"internalType": "uint256",
-						"name": "pricePaid",
+						"name": "cost",
 						"type": "uint256"
 					},
 					{
@@ -132,19 +148,6 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "bIntPower",
-				"outputs": [
-					{
-						"internalType": "bool",
-						"name": "",
-						"type": "bool"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "uint256",
@@ -158,6 +161,42 @@
 					}
 				],
 				"name": "burn",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "_tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_balances",
+						"type": "uint256[]"
+					}
+				],
+				"name": "burnBatch",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256[]",
+						"name": "_tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_balances",
+						"type": "uint256[]"
+					}
+				],
+				"name": "burnBatchETH",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -181,8 +220,50 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_power",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_startX",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_endX",
+						"type": "uint256"
+					}
+				],
+				"name": "caculateIntervalSum",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "bool",
+						"name": "bPlatform",
+						"type": "bool"
+					}
+				],
+				"name": "claimTotalProfit",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
-				"name": "bussinessCreator",
+				"name": "creator",
 				"outputs": [
 					{
 						"internalType": "address payable",
@@ -195,7 +276,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "bussinessRate",
+				"name": "creatorRate",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -209,6 +290,25 @@
 			{
 				"inputs": [],
 				"name": "d",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"name": "decPowerCache",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -240,7 +340,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "getCurrentPriceToBurn",
+				"name": "getCurrentCostToMint",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -259,7 +359,7 @@
 						"type": "uint256"
 					}
 				],
-				"name": "getCurrentPriceToMint",
+				"name": "getCurrentReturnToBurn",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -285,7 +385,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "initBurnPrice",
+				"name": "intPower",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -298,7 +398,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "initMintPrice",
+				"name": "m",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -323,7 +423,7 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "_maxPriceFistNFT",
+						"name": "_maxPriceFirstPASS",
 						"type": "uint256"
 					}
 				],
@@ -347,7 +447,50 @@
 					},
 					{
 						"internalType": "uint256",
-						"name": "_maxPriceFistNFT",
+						"name": "_amount",
+						"type": "uint256"
+					}
+				],
+				"name": "mint",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_balance",
+						"type": "uint256"
+					}
+				],
+				"name": "mintEth",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_balance",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_maxPriceFirstPASS",
 						"type": "uint256"
 					}
 				],
@@ -377,20 +520,7 @@
 			},
 			{
 				"inputs": [],
-				"name": "neolastics",
-				"outputs": [
-					{
-						"internalType": "contract ERC1155Ex",
-						"name": "",
-						"type": "address"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "platformCreator",
+				"name": "platform",
 				"outputs": [
 					{
 						"internalType": "address payable",
@@ -428,6 +558,73 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address payable",
+						"name": "_platform",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_platformRate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address payable",
+						"name": "_creator",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_createRate",
+						"type": "uint256"
+					}
+				],
+				"name": "setFeeParameters",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "thePASS",
+				"outputs": [
+					{
+						"internalType": "contract ERC1155Ex",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalCreatorProfit",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalPlatformProfit",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "virtualBalance",
 				"outputs": [
@@ -442,8 +639,28 @@
 			}
 		],
 		"devdoc": {
+			"details": "thePASS Bonding Curve - minting NFT through erc20 or eth PASS is orgnization's erc1155 token on curve  erc20 or eth is collateral token on curve  Users can mint PASS via deposting erc20 collateral token into curve thePASS Bonding Curve Formula: f(X) = m*(x^N)+v f(x) = PASS Price when total supply of PASS is x m, slope of bonding curve x = total supply of PASS  N = n/d v = virtual balance, Displacement  of bonding curve",
 			"kind": "dev",
-			"methods": {},
+			"methods": {
+				"burn(uint256,uint256)": {
+					"details": "user burn PASS/PASSes to receive corresponding collateral tokens _tokenId: the token id of PASS/PASSes to burn _balance: the number of PASS/PASSes to burn"
+				},
+				"burnEth(uint256,uint256)": {
+					"details": "user burn PASS/PASSes to receive corresponding ETHs _tokenId: the token id of PASS/PASSes to burn _balance: the number of PASS/PASSes to burn"
+				},
+				"constructor": {
+					"details": "constrcutor of bonding curve with formular: f(x)=m*(x^N)+v _erc20: collateral token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as eth instead of erc20 token _initMintPrice: f(1) = m + v, the first PASS minting price _m: m, slope of curve _virtualBalance: v = f(1) - _m, virtual balance, displacement of curve _n,_d: _n/_d = N, exponent of the curve reserve: reserve of collateral tokens stored in bonding curve AMM pool, start with 0"
+				},
+				"getCurrentReturnToBurn(uint256)": {
+					"details": "calculate the return of burning _balance PASSes in a transaction _balance: number of PASS/PASSes to be burned"
+				},
+				"mint(uint256,uint256,uint256)": {
+					"details": "each PASS minting transaction by depositing collateral erc20 tokens will create a new erc1155 token id sequentially _balance: number of PASSes user want to mint _amount: the maximum deposited amount set by the user _maxPriceFistNFT: the maximum price for the first mintable PASS to prevent front-running with least gas consumption return: token id"
+				},
+				"mintEth(uint256,uint256)": {
+					"details": "each PASS minting transaction by depositing ETHs will create a new erc1155 token id sequentially _balance: number of PASSes user want to mint _maxPriceFirstPASS: the maximum price for the first mintable PASS to prevent front-running with least gas consumption return: token ID"
+				}
+			},
 			"version": 1
 		},
 		"userdoc": {
@@ -454,7 +671,7 @@
 	},
 	"settings": {
 		"compilationTarget": {
-			"NFTBondingCurve/Curve.sol": "Curve"
+			"NFTBondingCurve/CurveClaimVer.sol": "Curve"
 		},
 		"evmVersion": "berlin",
 		"libraries": {},
@@ -508,6 +725,14 @@
 				"dweb:/ipfs/Qmbn5Mj7aUn8hJuQ8VrQjjEXRsXyJKykgnjR9p4C3nfLtL"
 			]
 		},
+		"@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol": {
+			"keccak256": "0x02348b2e4b9f3200c7e3907c5c2661643a6d8520e9f79939fbb9b4005a54894d",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://d41d627f4ef9c6006df8c2d01227d3cf4a6c3359b5704c629d88933272eecadd",
+				"dweb:/ipfs/QmYDo7MvMsvuDxuJZ9RC9zFganS3Tm8RYzSmBP5qSmJfuY"
+			]
+		},
 		"@openzeppelin/contracts/utils/Address.sol": {
 			"keccak256": "0x3336baae5cf23e94274d75336e2d412193be508504aee185e61dc7d58cd05c8a",
 			"license": "MIT",
@@ -556,28 +781,28 @@
 				"dweb:/ipfs/QmXN79ZS3btSrPhiMBWtWmdwaWKjYTaAYpVMt5QHvwwKMw"
 			]
 		},
-		"NFTBondingCurve/Curve.sol": {
-			"keccak256": "0xa4b8b035f0837e116849d18ccf923031d62ea9c4ba501b341ea06c147deebc87",
+		"NFTBondingCurve/CurveClaimVer.sol": {
+			"keccak256": "0x87116e0451c0e238eda7dcef3233c60cf4a0492819fbc72da47370e93d5af284",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://07ec9ffc1a0a28f4781ad321c14437575e059fd5fc4b58c67fcd4adae5d809fe",
-				"dweb:/ipfs/Qmd2io5MjVDoP1XVH2B9WpmqFRy7d5bD3trzj35GGmE4Dg"
+				"bzz-raw://bd1026f6c6c93801ae9641bfd202bc34ffb1dec1015408044a8eceee55f65a14",
+				"dweb:/ipfs/QmVCvGWBaEWT2YoF5YECzRKqSNqPUQbuydqd7UJxJ9V2kJ"
 			]
 		},
 		"NFTBondingCurve/ERC1155Ex.sol": {
-			"keccak256": "0xf8e7b38584399b0cd39aae27c040d46da0f585e7d0bb7a4baefedbc4b82ce4af",
+			"keccak256": "0xd4ffe57be953790458b816dde6bd65c45826d67bb00891ad5f4661081b04881a",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://9b79c2e59a77f9eb3980752053990ed85673a08aa4baeeec467e8d7b88d13825",
-				"dweb:/ipfs/QmY6BZqq3YG7H7jB5UVHgpJ3KXTCNwWkEdQAqhNXyjaAsL"
+				"bzz-raw://4344099103fe6dbb70c53dc8fbe016b6107d0939fe5e714f47c9562a5244af56",
+				"dweb:/ipfs/QmTJmPpzTG2Vy8kRZhVh9V1KuL73Y939qZkqxxoJLaYtJi"
 			]
 		},
 		"NFTBondingCurve/math-utils/AnalyticMath.sol": {
-			"keccak256": "0xccb42b7b7c1331377fc6582bd8f8fb9843cb8d03375386169b2eef725d6d5ac0",
+			"keccak256": "0xa43df36cddf64aceed0841c8b223a089cbeda26c700f2076234565e401c46be4",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://09f41cf65d37c0cc8ecae267abf403722083568a886241f931c0a61a2ed6d944",
-				"dweb:/ipfs/QmYyR1Qc4wVbAD2sPbS6fN38mY16aRXJ9hhxwR6iPo6NTH"
+				"bzz-raw://7e39ead57bbe3cfd1fc6b9f5a051e87491770e5c0a9deeba8fcc8ac07ae64cc1",
+				"dweb:/ipfs/QmVdscduD1xK7gBGu5k1jhJqrYQbDujKo1rigBzruyAxCp"
 			]
 		},
 		"NFTBondingCurve/math-utils/IntegralMath.sol": {

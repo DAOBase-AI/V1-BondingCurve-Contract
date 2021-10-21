@@ -6,7 +6,13 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "_baseUri",
+						"type": "string"
+					}
+				],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
 			},
@@ -200,6 +206,29 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_to",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_tokenIds",
+						"type": "uint256[]"
+					},
+					{
+						"internalType": "uint256[]",
+						"name": "_balances",
+						"type": "uint256[]"
+					}
+				],
+				"name": "burnBatch",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "curve",
 				"outputs": [
@@ -207,6 +236,49 @@
 						"internalType": "address",
 						"name": "",
 						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_userAddr",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_index",
+						"type": "uint256"
+					}
+				],
+				"name": "getUserTokenId",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "_userAddr",
+						"type": "address"
+					}
+				],
+				"name": "getUserTokenIdNumber",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -418,6 +490,9 @@
 				"balanceOfBatch(address[],uint256[])": {
 					"details": "See {IERC1155-balanceOfBatch}. Requirements: - `accounts` and `ids` must have the same length."
 				},
+				"burn(address,uint256,uint256)": {
+					"details": "burn erc1155 tokens owned by address(_to) _tokenId: token id of erc1155 tokens to burn _balance: number of erc1155 tokens to burn"
+				},
 				"isApprovedForAll(address,address)": {
 					"details": "See {IERC1155-isApprovedForAll}."
 				},
@@ -525,12 +600,20 @@
 				"dweb:/ipfs/QmcsVgLgzWdor3UnAztUkXKNGcysm1MPneWksF72AvnwBx"
 			]
 		},
-		"NFTBondingCurve/ERC1155Ex.sol": {
-			"keccak256": "0x081267faa6b44cb94f446ccff6f480d28d0106d686852248c6dd208f53246682",
+		"@openzeppelin/contracts/utils/structs/EnumerableSet.sol": {
+			"keccak256": "0x3778dc944f4a696335878bad8beca60f38b7c79b7a0bd8ddbeb618bd502a95ae",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://974fdb0d056776c871186d49063a26d627cc8296583d0a7f63366fe4f0675ecd",
-				"dweb:/ipfs/QmNkFiTaCjBSxhAT6FeGtRynibTge3NEWXu1qKxqA5aDP6"
+				"bzz-raw://12961fd593c79b60088c8829fd760db4149790b1c702411919fac76769e8c39a",
+				"dweb:/ipfs/QmXN79ZS3btSrPhiMBWtWmdwaWKjYTaAYpVMt5QHvwwKMw"
+			]
+		},
+		"NFTBondingCurve/ERC1155Ex.sol": {
+			"keccak256": "0xd4ffe57be953790458b816dde6bd65c45826d67bb00891ad5f4661081b04881a",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://4344099103fe6dbb70c53dc8fbe016b6107d0939fe5e714f47c9562a5244af56",
+				"dweb:/ipfs/QmTJmPpzTG2Vy8kRZhVh9V1KuL73Y939qZkqxxoJLaYtJi"
 			]
 		}
 	},
