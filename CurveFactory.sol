@@ -15,6 +15,8 @@ contract CurveFactory is Ownable {
     mapping(address => address) public curveOwnerMap;   // mapping curve address with corresponding owner address
     mapping(address => EnumerableSet.AddressSet) private userCurves;   // enumerable array of curve owner address
     
+    event CurveCreated(address indexed owner, address indexed curveAddr);
+    
     constructor() {
     }
     
@@ -49,6 +51,7 @@ contract CurveFactory is Ownable {
         userCurves[msg.sender].add(curveAddr);      // accumulate the number of curves created by a user
         curves.push(curveAddr);                     // add newly created curve address into the array of curve address
         curveOwnerMap[curveAddr] = msg.sender;      // binding created curve address with corresponding owner address
+        emit CurveCreated(msg.sender, curveAddr);
     }
     
     // total number of curves created via factory account
