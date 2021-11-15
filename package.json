@@ -1,0 +1,40 @@
+{
+  "name": "beeper-dao-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "test:parallel": "mocha --require hardhat/register --recursive --parallel --exit --timeout 10000"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.1",
+    "hardhat": "^2.6.2",
+    "prb-math": "^2.2.0"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@nomiclabs/hardhat-etherscan": "^2.1.6",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.4",
+    "dotenv": "^10.0.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.24.2",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^3.4.1",
+    "eslint-plugin-promise": "^5.1.0",
+    "ethereum-waffle": "^3.4.0",
+    "ethers": "^5.5.1",
+    "hardhat-abi-exporter": "^2.3.1",
+    "hardhat-contract-sizer": "^2.1.1",
+    "hardhat-gas-reporter": "^1.0.4",
+    "mocha": "^9.1.3",
+    "prettier": "^2.4.1",
+    "prettier-plugin-solidity": "^1.0.0-beta.18",
+    "solhint": "^3.3.6",
+    "solidity-coverage": "^0.7.17"
+  }
+}
