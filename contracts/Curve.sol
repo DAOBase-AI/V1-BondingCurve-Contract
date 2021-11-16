@@ -37,11 +37,9 @@ contract Curve is ERC1155Ex {
 
     address payable public platform; // thePass platform's commission account
     uint256 public platformRate; // thePass platform's commission rate in pph
-    uint256 public totalPlatformProfit; // thePass platform's total commission profits
 
     address payable public creator; // creator's commission account
     uint256 public creatorRate; // creator's commission rate in pph
-    uint256 public totalCreatorProfit; // creator's total commission profits
 
     IAnalyticMath public analyticMath =
         IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
@@ -273,20 +271,21 @@ contract Curve is ERC1155Ex {
     ) private returns (uint256) {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough token sent");
-        if (bETH) {
-            if (_amount.sub(mintCost) > 0)
-                payable(msg.sender).transfer(_amount.sub(mintCost));
-        } else {
-            erc20.safeTransferFrom(msg.sender, address(this), mintCost);
-        }
-
-        uint256 tokenId = mint(msg.sender, _balance);
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
+        
+        if (bETH) {
+            if (_amount.sub(mintCost) > 0)
+                payable(msg.sender).transfer(_amount.sub(mintCost));
+                platform.transfer(platformProfit);
+                creator.transfer(creatorProfit);
+        } else {
+            erc20.safeTransferFrom(msg.sender, platform, platformProfit);
+            erc20.safeTransferFrom(msg.sender, creator, creatorProfit);
+        }
 
-        totalPlatformProfit = totalPlatformProfit.add(platformProfit);
-        totalCreatorProfit = totalCreatorProfit.add(creatorProfit);
+        uint256 tokenId = mint(msg.sender, _balance);
 
         uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
         reserve = reserve.add(reserveCut);
@@ -429,28 +428,5 @@ contract Curve is ERC1155Ex {
             analyticMath.caculateIntPowerSum(_power, _endX).sub(
                 analyticMath.caculateIntPowerSum(_power, _startX - 1)
             );
-    }
-
-    // only thePASS platform and creator can claim their corresponding commission profits
-    function claimTotalProfit(bool bPlatform) public {
-        if (address(erc20) == address(0)) {
-            if (bPlatform) {
-                platform.transfer(totalPlatformProfit);
-            } else {
-                creator.transfer(totalCreatorProfit);
-            }
-        } else {
-            if (bPlatform) {
-                erc20.safeTransfer(platform, totalPlatformProfit);
-            } else {
-                erc20.safeTransfer(creator, totalCreatorProfit);
-            }
-        }
-
-        if (bPlatform) {
-            totalPlatformProfit = 0;
-        } else {
-            totalCreatorProfit = 0;
-        }
     }
 }
