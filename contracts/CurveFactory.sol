@@ -58,12 +58,12 @@ contract CurveFactory is Ownable {
         Curve curve = new Curve(
             _name,
             _symbol,
+            _baseUri,
             _erc20,
             _initMintPrice,
             _m,
             _n,
-            _d,
-            _baseUri
+            _d
         );
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
 

@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.6;
 
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "hardhat/console.sol";
 
 contract ERC1155Ex is ERC1155 {
-    using EnumerableSet for EnumerableSet.UintSet;
-
     // Contract name
     string public name;
     // Contract symbol
@@ -15,19 +13,25 @@ contract ERC1155Ex is ERC1155 {
     address public curve;
     uint256 public totalSupply; // total supply of erc1155 tokens
     uint256 public tokenId;
-//    mapping(address => EnumerableSet.UintSet) private userTokenIds;   // record all users' token IDs
-    
-    constructor (string memory _baseUri) ERC1155(_baseUri) {
-        curve = msg.sender;
+
+    //    mapping(address => EnumerableSet.UintSet) private userTokenIds;   // record all users' token IDs
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseUri
+    ) ERC1155(_baseUri) {
+        name = _name;
+        symbol = _symbol;
     }
 
     // mint a batch of erc1155 tokens to address(_to)
-    function mint(address _to, uint256 _balance) public returns (uint256) {
-        require(msg.sender == curve, "ERC1155Ex: Minter is not the CURVE");
+    function mint(address _to, uint256 _balance) internal returns (uint256) {
+        console.log(6666666);
         tokenId += 1;
         _mint(_to, tokenId, _balance, "");
         totalSupply += _balance;
-//        userTokenIds[_to].add(tokenId);
+        //        userTokenIds[_to].add(tokenId);
         return tokenId;
     }
 
@@ -40,33 +44,34 @@ contract ERC1155Ex is ERC1155 {
         address _to,
         uint256 _tokenId,
         uint256 _balance
-    ) public {
-        require(msg.sender == curve, "ERC1155Ex: minter is not the curve");
+    ) internal {
         _burn(_to, _tokenId, _balance);
         totalSupply -= _balance;
-/*        if (balanceOf(_to, _tokenId) == 0) {
+        /*        if (balanceOf(_to, _tokenId) == 0) {
             userTokenIds[_to].remove(_tokenId);
         }
-*/    }
-    
+*/
+    }
+
     // burn a batch of erc1155 tokens
     function burnBatch(
         address _to,
         uint256[] memory _tokenIds,
         uint256[] memory _balances
-    ) public {
+    ) internal {
         require(msg.sender == curve, "ERC1155Ex: Minter is not the curve");
 
         _burnBatch(_to, _tokenIds, _balances);
 
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             totalSupply -= _balances[i];
-/*            if (balanceOf(_to, _tokenIds[i]) == 0) {
+            /*            if (balanceOf(_to, _tokenIds[i]) == 0) {
                 userTokenIds[_to].remove(_tokenIds[i]);
             }   
-*/      }
+*/
+        }
     }
-/*
+    /*
     // Get the total number of ERC1155 token IDs owned by a user
     function getUserTokenIdNumber(address _userAddr)
         public
@@ -84,5 +89,5 @@ contract ERC1155Ex is ERC1155 {
     {
         return userTokenIds[_userAddr].at(_index);
     }
-}
 */
+}

@@ -21,7 +21,7 @@ import "./math-utils/AnalyticMath.sol";
 * v = virtual balance, Displacement 
 of bonding curve
 */
-contract Curve {
+contract Curve is ERC1155Ex {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -42,8 +42,6 @@ contract Curve {
     address payable public creator; // creator's commission account
     uint256 public creatorRate; // creator's commission rate in pph
     uint256 public totalCreatorProfit; // creator's total commission profits
-
-    ERC1155Ex public thePASS; // thePASS extened ERC1155 contract
 
     IAnalyticMath public analyticMath =
         IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
@@ -79,13 +77,13 @@ contract Curve {
     constructor(
         string memory _name,
         string memory _symbol,
+        string memory _baseUri,
         address _erc20,
         uint256 _initMintPrice,
         uint256 _m,
         uint256 _n,
-        uint256 _d,
-        string memory _baseUri
-    ) {
+        uint256 _d
+    ) ERC1155Ex(_name, _symbol, _baseUri) {
         erc20 = IERC20(_erc20);
         m = _m;
         n = _n;
@@ -98,7 +96,6 @@ contract Curve {
 
         virtualBalance = _initMintPrice - _m;
         reserve = 0;
-        thePASS = new ERC1155Ex(_name, _symbol, _baseUri);
     }
 
     // @creator commission account and rate initilization
@@ -157,7 +154,7 @@ contract Curve {
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
         // checks if allowed to burn
-        thePASS.burn(msg.sender, _tokenId, _balance);
+        burn(msg.sender, _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
         erc20.safeTransfer(msg.sender, burnReturn);
@@ -182,7 +179,7 @@ contract Curve {
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
         // checks if allowed to burn
-        thePASS.burnBatch(msg.sender, _tokenIds, _balances);
+        burnBatch(msg.sender, _tokenIds, _balances);
 
         reserve = reserve.sub(burnReturn);
         erc20.safeTransfer(msg.sender, burnReturn);
@@ -235,7 +232,7 @@ contract Curve {
         );
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
-        thePASS.burn(msg.sender, _tokenId, _balance);
+        burn(msg.sender, _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
         payable(msg.sender).transfer(burnReturn);
@@ -260,7 +257,7 @@ contract Curve {
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
-        thePASS.burnBatch(msg.sender, _tokenIds, _balances);
+        burnBatch(msg.sender, _tokenIds, _balances);
 
         reserve = reserve.sub(burnReturn);
         payable(msg.sender).transfer(burnReturn);
@@ -283,7 +280,7 @@ contract Curve {
             erc20.safeTransferFrom(msg.sender, address(this), mintCost);
         }
 
-        uint256 tokenId = thePASS.mint(msg.sender, _balance);
+        uint256 tokenId = mint(msg.sender, _balance);
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
@@ -419,7 +416,7 @@ contract Curve {
 
     // get current supply of PASS
     function getCurrentSupply() public view returns (uint256) {
-        return thePASS.totalSupply();
+        return totalSupply;
     }
 
     // Bernoulli's formula for calculating the sum of intervals between the two reserves
