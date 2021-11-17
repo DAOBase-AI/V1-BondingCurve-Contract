@@ -158,6 +158,18 @@
         "internalType": "uint256",
         "name": "balance",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "platformProfit",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "creatorProfit",
+        "type": "uint256"
       }
     ],
     "name": "Minted",

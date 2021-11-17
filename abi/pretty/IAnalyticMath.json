@@ -1,0 +1,4 @@
+[
+  "function caculateIntPowerSum(uint256 power, uint256 n) pure returns (uint256)",
+  "function pow(uint256 a, uint256 b, uint256 c, uint256 d) view returns (uint256, uint256)"
+]
