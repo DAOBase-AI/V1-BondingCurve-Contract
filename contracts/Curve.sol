@@ -17,18 +17,15 @@ import "./math-utils/AnalyticMath.sol";
 * f(x) = PASS Price when total supply of PASS is x
 * m, slope of bonding curve
 * x = total supply of PASS 
-* N = n/d
-* v = virtual balance, Displacement 
-of bonding curve
+* N = n/d, represented by intPower when N is integer
+* v = virtual balance, Displacement of bonding curve
 */
 contract Curve is ERC1155 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
-    // Contract name
-    string public name;
-    // Contract symbol
-    string public symbol;
+    string public name; // Contract name
+    string public symbol; // Contract symbol
     uint256 public tokenId;
 
     IERC20 public erc20; // collateral token on bonding curve
