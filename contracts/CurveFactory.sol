@@ -14,9 +14,14 @@ contract CurveFactory is Ownable {
     event CurveCreated(
         address indexed owner,
         address indexed curveAddr,
+        string memory _name,
+        string memory _symbol,
+        uint256 _initMintPrice,
+        address _erc20,
         uint256 m,
         uint256 n,
-        uint256 d
+        uint256 d,
+        string memory _baseUri
     );
 
     constructor() {}
@@ -73,6 +78,6 @@ contract CurveFactory is Ownable {
         );
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
         address curveAddr = address(curve); // get contract address of created curve
-        emit CurveCreated(msg.sender, curveAddr, _m, _n, _d);
+        emit CurveCreated(msg.sender, curveAddr, _name, _symbol, _initMintPrice, _erc20, _m, _n, _d, _baseUri);
     }
 }
