@@ -10,8 +10,6 @@ contract CurveFactory is Ownable {
 
     address payable public platform; // platform commision account
     uint256 public platformRate = 1; // % of total minting cost as platform commission
-    address[] public curves; // array of created curve address
-    mapping(address => address) public curveOwnerMap; // mapping curve address with corresponding owner address
 
     event CurveCreated(
         address indexed owner,
@@ -23,7 +21,7 @@ contract CurveFactory is Ownable {
 
     constructor() {}
 
-    // set up the platform commission account
+    // set up the platform commission account and platform commission rate, only operable by contract owner, _platformRate is in pph
     function setPlatformParms(address payable _platform, uint256 _platformRate)
         public
         onlyOwner
@@ -32,7 +30,7 @@ contract CurveFactory is Ownable {
         platformRate = _platformRate;
     }
 
-    // set the platform commission rate, only operable by contract owner, _platformRate is in pph
+    // set the limit of total commission rate, only operable by contract owner, _totalRateLimit is in pph
     function setTotalRateLimit(uint256 _totalRateLimit) public onlyOwner {
         totalRateLimit = _totalRateLimit;
     }
@@ -74,10 +72,7 @@ contract CurveFactory is Ownable {
             _d
         );
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
-
         address curveAddr = address(curve); // get contract address of created curve
-        curves.push(curveAddr); // add newly created curve address into the array of curve address
-        curveOwnerMap[curveAddr] = msg.sender; // binding created curve address with corresponding owner address
         emit CurveCreated(msg.sender, curveAddr, _m, _n, _d);
     }
 }
