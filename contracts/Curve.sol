@@ -54,7 +54,8 @@ contract Curve is ERC1155 {
         uint256 indexed tokenId,
         uint256 indexed cost,
         uint256 indexed reserveAfterMint,
-        uint256 balance
+        uint256 balance,
+        uint256 platformProfit
     );
     event Burned(
         uint256 indexed tokenId,
@@ -306,7 +307,7 @@ contract Curve is ERC1155 {
             }
         }
 
-        emit Minted(tokenId, mintCost, reserve, _balance);
+        emit Minted(tokenId, mintCost, reserve, _balance, platformProfit);
 
         return tokenId; // returns tokenId in case its useful to check it
     }
