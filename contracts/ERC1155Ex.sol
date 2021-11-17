@@ -27,7 +27,6 @@ contract ERC1155Ex is ERC1155 {
 
     // mint a batch of erc1155 tokens to address(_to)
     function mint(address _to, uint256 _balance) internal returns (uint256) {
-        console.log(6666666);
         tokenId += 1;
         _mint(_to, tokenId, _balance, "");
         totalSupply += _balance;

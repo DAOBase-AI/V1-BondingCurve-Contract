@@ -62,6 +62,7 @@ contract Curve is ERC1155Ex {
         uint256 indexed returnAmount,
         uint256 indexed reserveAfterBurn
     );
+    event Withdraw(address indexed to, uint256 amount);
 
     /**
      * @dev constrcutor of bonding curve with formular: f(x)=m*(x^N)+v
@@ -274,15 +275,20 @@ contract Curve is ERC1155Ex {
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
-        
+
         if (bETH) {
-            if (_amount.sub(mintCost) > 0)
+            // return overcharge eth
+            if (_amount.sub(mintCost) > 0) {
                 payable(msg.sender).transfer(_amount.sub(mintCost));
+            }
+            if (platformRate > 0) {
                 platform.transfer(platformProfit);
-                creator.transfer(creatorProfit);
+            }
         } else {
-            erc20.safeTransferFrom(msg.sender, platform, platformProfit);
-            erc20.safeTransferFrom(msg.sender, creator, creatorProfit);
+            erc20.safeTransferFrom(msg.sender, address(this), mintCost);
+            if (platformRate > 0) {
+                erc20.safeTransfer(platform, platformProfit);
+            }
         }
 
         uint256 tokenId = mint(msg.sender, _balance);
@@ -293,6 +299,14 @@ contract Curve is ERC1155Ex {
         emit Minted(tokenId, mintCost, reserve, _balance);
 
         return tokenId; // returns tokenId in case its useful to check it
+    }
+
+    function _getEthBalance() internal view returns (uint256) {
+        return address(this).balance;
+    }
+
+    function _getErc20Balance() internal view returns (uint256) {
+        return IERC20(erc20).balanceOf(address(this));
     }
 
     /**
@@ -428,5 +442,16 @@ contract Curve is ERC1155Ex {
             analyticMath.caculateIntPowerSum(_power, _endX).sub(
                 analyticMath.caculateIntPowerSum(_power, _startX - 1)
             );
+    }
+
+    // anyone can withdraw reserve of erc20 tokens/ETH to creator's beneficiary account
+    function withdraw() public {
+        if (address(erc20) == address(0)) {
+            creator.transfer(_getEthBalance());
+            emit Withdraw(creator, _getEthBalance());
+        } else {
+            erc20.safeTransfer(creator, _getErc20Balance()); // withdraw erc20 tokens to beneficiary account
+            emit Withdraw(creator, _getErc20Balance());
+        }
     }
 }
