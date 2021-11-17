@@ -3,17 +3,13 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "./Curve.sol";
 
 contract CurveFactory is Ownable {
-    using EnumerableSet for EnumerableSet.AddressSet;
-
     address payable public platform; // platform commision account
     uint256 public platformRate = 1; // % of total minting cost as platform commission
     address[] public curves; // array of created curve address
     mapping(address => address) public curveOwnerMap; // mapping curve address with corresponding owner address
-    mapping(address => EnumerableSet.AddressSet) private userCurves; // enumerable array of curve owner address
 
     event CurveCreated(address indexed owner, address indexed curveAddr);
 
@@ -68,32 +64,8 @@ contract CurveFactory is Ownable {
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
 
         address curveAddr = address(curve); // get contract address of created curve
-        userCurves[msg.sender].add(curveAddr); // accumulate the number of curves created by a user
         curves.push(curveAddr); // add newly created curve address into the array of curve address
         curveOwnerMap[curveAddr] = msg.sender; // binding created curve address with corresponding owner address
         emit CurveCreated(msg.sender, curveAddr);
-    }
-
-    // total number of curves created via factory account
-    function getCurveTotalNumber() public view returns (uint256) {
-        return curves.length;
-    }
-
-    // total number of curves created by a user
-    function getUserCurveNumber(address _userAddr)
-        public
-        view
-        returns (uint256)
-    {
-        return userCurves[_userAddr].length();
-    }
-
-    // get the curve address by user address and index
-    function getUserCurve(address _userAddr, uint256 _index)
-        public
-        view
-        returns (address)
-    {
-        return userCurves[_userAddr].at(_index);
     }
 }
