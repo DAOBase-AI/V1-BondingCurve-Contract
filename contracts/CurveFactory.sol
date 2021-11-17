@@ -6,23 +6,35 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Curve.sol";
 
 contract CurveFactory is Ownable {
+    uint256 private totalRateLimit = 50;
+
     address payable public platform; // platform commision account
     uint256 public platformRate = 1; // % of total minting cost as platform commission
     address[] public curves; // array of created curve address
     mapping(address => address) public curveOwnerMap; // mapping curve address with corresponding owner address
 
-    event CurveCreated(address indexed owner, address indexed curveAddr);
+    event CurveCreated(
+        address indexed owner,
+        address indexed curveAddr,
+        uint256 m,
+        uint256 n,
+        uint256 d
+    );
 
     constructor() {}
 
     // set up the platform commission account
-    function setPlatform(address payable _platform) public onlyOwner {
+    function setPlatformParms(address payable _platform, uint256 _platformRate)
+        public
+        onlyOwner
+    {
         platform = _platform;
+        platformRate = _platformRate;
     }
 
     // set the platform commission rate, only operable by contract owner, _platformRate is in pph
-    function setPlatformRate(uint256 _platformRate) public onlyOwner {
-        platformRate = _platformRate;
+    function setTotalRateLimit(uint256 _totalRateLimit) public onlyOwner {
+        totalRateLimit = _totalRateLimit;
     }
 
     /**
@@ -35,17 +47,37 @@ contract CurveFactory is Ownable {
      * _n,_d: _n/_d = N, exponent of the curve
      * _baseUri: base URI for PASS metadata
      */
-    function createCurve(string memory _name, string memory _symbol, address payable _creator, uint256 _creatorRate, uint256 _initMintPrice, address _erc20, uint256 _m, uint256 _n, uint256 _d, string memory _baseUri) public {
+    function createCurve(
+        string memory _name,
+        string memory _symbol,
+        address payable _creator,
+        uint256 _creatorRate,
+        uint256 _initMintPrice,
+        address _erc20,
+        uint256 _m,
+        uint256 _n,
+        uint256 _d,
+        string memory _baseUri
+    ) public {
         require(
-            _creatorRate <= 50 - platformRate,
+            _creatorRate <= totalRateLimit - platformRate,
             "Curve: creator's commission rate is too high."
         );
-        Curve curve = new Curve(_name, _symbol, _baseUri, _erc20, _initMintPrice, _m, _n, _d);
+        Curve curve = new Curve(
+            _name,
+            _symbol,
+            _baseUri,
+            _erc20,
+            _initMintPrice,
+            _m,
+            _n,
+            _d
+        );
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
 
         address curveAddr = address(curve); // get contract address of created curve
         curves.push(curveAddr); // add newly created curve address into the array of curve address
         curveOwnerMap[curveAddr] = msg.sender; // binding created curve address with corresponding owner address
-        emit CurveCreated(msg.sender, curveAddr);
+        emit CurveCreated(msg.sender, curveAddr, _m, _n, _d);
     }
 }

@@ -1,5 +1,5 @@
 [
-  "event CurveCreated(address indexed owner, address indexed curveAddr)",
+  "event CurveCreated(address indexed owner, address indexed curveAddr, uint256 m, uint256 n, uint256 d)",
   "event OwnershipTransferred(address indexed previousOwner, address indexed newOwner)",
   "function createCurve(string _name, string _symbol, address _creator, uint256 _creatorRate, uint256 _initMintPrice, address _erc20, uint256 _m, uint256 _n, uint256 _d, string _baseUri)",
   "function curveOwnerMap(address) view returns (address)",
@@ -8,7 +8,7 @@
   "function platform() view returns (address)",
   "function platformRate() view returns (uint256)",
   "function renounceOwnership()",
-  "function setPlatform(address _platform)",
-  "function setPlatformRate(uint256 _platformRate)",
+  "function setPlatformParms(address _platform, uint256 _platformRate)",
+  "function setTotalRateLimit(uint256 _totalRateLimit)",
   "function transferOwnership(address newOwner)"
 ]
