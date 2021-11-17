@@ -50,26 +50,9 @@ contract Curve is ERC1155 {
     IAnalyticMath public analyticMath =
         IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
 
-    event Minted(
-        uint256 indexed tokenId,
-        uint256 indexed cost,
-        uint256 indexed reserveAfterMint,
-        uint256 balance,
-        uint256 platformProfit,
-        uint256 creatorProfit
-    );
-    event Burned(
-        uint256 indexed tokenId,
-        uint256 indexed returnAmount,
-        uint256 indexed reserveAfterBurn,
-        uint256 balance
-    );
-    event BatchBurned(
-        uint256[] tokenIds,
-        uint256[] balances,
-        uint256 indexed returnAmount,
-        uint256 indexed reserveAfterBurn
-    );
+    event Minted(uint256 indexed tokenId, uint256 indexed cost, uint256 indexed reserveAfterMint, uint256 balance, uint256 platformProfit, uint256 creatorProfit);
+    event Burned(uint256 indexed tokenId, uint256 indexed returnAmount, uint256 indexed reserveAfterBurn, uint256 balance);
+    event BatchBurned(uint256[] tokenIds,uint256[] balances,uint256 indexed returnAmount,uint256 indexed reserveAfterBurn);
     event Withdraw(address indexed to, uint256 amount);
 
     /**
@@ -81,16 +64,7 @@ contract Curve is ERC1155 {
      * _n,_d: _n/_d = N, exponent of the curve
      * reserve: reserve of collateral tokens stored in bonding curve AMM pool, start with 0
      */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        string memory _baseUri,
-        address _erc20,
-        uint256 _initMintPrice,
-        uint256 _m,
-        uint256 _n,
-        uint256 _d
-    ) ERC1155(_baseUri) {
+    constructor(string memory _name, string memory _symbol, string memory _baseUri, address _erc20, uint256 _initMintPrice, uint256 _m, uint256 _n, uint256 _d) ERC1155(_baseUri) {
         name = _name;
         symbol = _symbol;
 
@@ -109,12 +83,7 @@ contract Curve is ERC1155 {
     }
 
     // @creator commission account and rate initilization
-    function setFeeParameters(
-        address payable _platform,
-        uint256 _platformRate,
-        address payable _creator,
-        uint256 _createRate
-    ) public {
+    function setFeeParameters(address payable _platform, uint256 _platformRate, address payable _creator, uint256 _createRate) public {
         require(
             platform == address(0) && creator == address(0),
             "Curve: commission account and rate cannot be modified."
@@ -132,11 +101,7 @@ contract Curve is ERC1155 {
      * _maxPriceFistNFT: the maximum price for the first mintable PASS to prevent front-running with least gas consumption
      * return: token id
      */
-    function mint(
-        uint256 _balance,
-        uint256 _amount,
-        uint256 _maxPriceFirstPASS
-    ) public returns (uint256) {
+    function mint(uint256 _balance, uint256 _amount, uint256 _maxPriceFirstPASS) public returns (uint256) {
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 firstPrice = caculateCurrentCostToMint(1);
         require(
@@ -150,7 +115,6 @@ contract Curve is ERC1155 {
     // for small amount of PASS minting, it will be unceessary to check the maximum price for the fist mintable PASS
     function mint(uint256 _balance, uint256 _amount) public returns (uint256) {
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
-
         return _mint(_balance, _amount, false);
     }
 
@@ -173,9 +137,7 @@ contract Curve is ERC1155 {
     }
 
     // allow user to burn batches of PASSes with a set of token id
-    function burnBatch(uint256[] memory _tokenIds, uint256[] memory _balances)
-        public
-    {
+    function burnBatch(uint256[] memory _tokenIds, uint256[] memory _balances) public {
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
         require(
             _tokenIds.length == _balances.length,
@@ -203,11 +165,7 @@ contract Curve is ERC1155 {
      * _maxPriceFirstPASS: the maximum price for the first mintable PASS to prevent front-running with least gas consumption
      * return: token ID
      */
-    function mintEth(uint256 _balance, uint256 _maxPriceFirstPASS)
-        public
-        payable
-        returns (uint256)
-    {
+    function mintEth(uint256 _balance, uint256 _maxPriceFirstPASS) public payable returns (uint256) {
         require(
             address(erc20) == address(0),
             "Curve: erc20 address is NOT null."
@@ -251,10 +209,7 @@ contract Curve is ERC1155 {
     }
 
     // allow user to burn batches of PASSes with a set of token id
-    function burnBatchETH(
-        uint256[] memory _tokenIds,
-        uint256[] memory _balances
-    ) public {
+    function burnBatchETH(uint256[] memory _tokenIds, uint256[] memory _balances) public {
         require(address(erc20) == address(0), "Curve: erc20 address is null.");
         require(
             _tokenIds.length == _balances.length,
@@ -276,11 +231,7 @@ contract Curve is ERC1155 {
     }
 
     // internal function to mint PASS
-    function _mint(
-        uint256 _balance,
-        uint256 _amount,
-        bool bETH
-    ) private returns (uint256) {
+    function _mint(uint256 _balance, uint256 _amount, bool bETH) private returns (uint256) {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough token sent");
 
@@ -325,10 +276,7 @@ contract Curve is ERC1155 {
      * @dev internal function to calculate the cost of minting _balance PASSes in a transaction
      * _balance: number of PASS/PASSes to mint
      */
-    function caculateCurrentCostToMint(uint256 _balance)
-        internal
-        returns (uint256)
-    {
+    function caculateCurrentCostToMint(uint256 _balance) internal returns (uint256) {
         uint256 curStartX = getCurrentSupply() + 1;
         uint256 totalCost;
         if (intPower > 0) {
@@ -364,11 +312,7 @@ contract Curve is ERC1155 {
     }
 
     // external view function to query the current cost to mint a PASS/PASSes
-    function getCurrentCostToMint(uint256 _balance)
-        public
-        view
-        returns (uint256)
-    {
+    function getCurrentCostToMint(uint256 _balance) public view returns (uint256) {
         uint256 curStartX = getCurrentSupply() + 1;
         uint256 totalCost;
         if (intPower > 0) {
@@ -402,11 +346,7 @@ contract Curve is ERC1155 {
      * @dev calculate the return of burning _balance PASSes in a transaction
      * _balance: number of PASS/PASSes to be burned
      */
-    function getCurrentReturnToBurn(uint256 _balance)
-        public
-        view
-        returns (uint256)
-    {
+    function getCurrentReturnToBurn(uint256 _balance) public view returns (uint256){
         uint256 curEndX = getCurrentSupply();
         _balance = _balance > curEndX ? curEndX : _balance;
 
@@ -445,11 +385,7 @@ contract Curve is ERC1155 {
     }
 
     // Bernoulli's formula for calculating the sum of intervals between the two reserves
-    function caculateIntervalSum(
-        uint256 _power,
-        uint256 _startX,
-        uint256 _endX
-    ) public view returns (uint256) {
+    function caculateIntervalSum(uint256 _power, uint256 _startX, uint256 _endX) public view returns (uint256) {
         return
             analyticMath.caculateIntPowerSum(_power, _endX).sub(
                 analyticMath.caculateIntPowerSum(_power, _startX - 1)

@@ -35,32 +35,12 @@ contract CurveFactory is Ownable {
      * _n,_d: _n/_d = N, exponent of the curve
      * _baseUri: base URI for PASS metadata
      */
-    function createCurve(
-        string memory _name,
-        string memory _symbol,
-        address payable _creator,
-        uint256 _creatorRate,
-        uint256 _initMintPrice,
-        address _erc20,
-        uint256 _m,
-        uint256 _n,
-        uint256 _d,
-        string memory _baseUri
-    ) public {
+    function createCurve(string memory _name, string memory _symbol, address payable _creator, uint256 _creatorRate, uint256 _initMintPrice, address _erc20, uint256 _m, uint256 _n, uint256 _d, string memory _baseUri) public {
         require(
             _creatorRate <= 50 - platformRate,
             "Curve: creator's commission rate is too high."
         );
-        Curve curve = new Curve(
-            _name,
-            _symbol,
-            _baseUri,
-            _erc20,
-            _initMintPrice,
-            _m,
-            _n,
-            _d
-        );
+        Curve curve = new Curve(_name, _symbol, _baseUri, _erc20, _initMintPrice, _m, _n, _d);
         curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
 
         address curveAddr = address(curve); // get contract address of created curve
