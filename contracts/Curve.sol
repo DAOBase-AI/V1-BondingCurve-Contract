@@ -3,9 +3,9 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./ERC1155Ex.sol";
 import "./math-utils/AnalyticMath.sol";
 
 /**
@@ -21,9 +21,15 @@ import "./math-utils/AnalyticMath.sol";
 * v = virtual balance, Displacement 
 of bonding curve
 */
-contract Curve is ERC1155Ex {
+contract Curve is ERC1155 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    // Contract name
+    string public name;
+    // Contract symbol
+    string public symbol;
+    uint256 public tokenId;
 
     IERC20 public erc20; // collateral token on bonding curve
     uint256 public m; // slope of bonding curve
@@ -82,7 +88,10 @@ contract Curve is ERC1155Ex {
         uint256 _m,
         uint256 _n,
         uint256 _d
-    ) ERC1155Ex(_name, _symbol, _baseUri) {
+    ) ERC1155(_baseUri) {
+        name = _name;
+        symbol = _symbol;
+
         erc20 = IERC20(_erc20);
         m = _m;
         n = _n;
@@ -153,10 +162,10 @@ contract Curve is ERC1155Ex {
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
         // checks if allowed to burn
-        burn(msg.sender, _tokenId, _balance);
+        _burn(_msgSender(), _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
-        erc20.safeTransfer(msg.sender, burnReturn);
+        erc20.safeTransfer(_msgSender(), burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
@@ -178,10 +187,10 @@ contract Curve is ERC1155Ex {
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
         // checks if allowed to burn
-        burnBatch(msg.sender, _tokenIds, _balances);
+        _burnBatch(_msgSender(), _tokenIds, _balances);
 
         reserve = reserve.sub(burnReturn);
-        erc20.safeTransfer(msg.sender, burnReturn);
+        erc20.safeTransfer(_msgSender(), burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
     }
@@ -231,10 +240,10 @@ contract Curve is ERC1155Ex {
         );
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
-        burn(msg.sender, _tokenId, _balance);
+        _burn(_msgSender(), _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
-        payable(msg.sender).transfer(burnReturn);
+        payable(_msgSender()).transfer(burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
@@ -256,10 +265,10 @@ contract Curve is ERC1155Ex {
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
-        burnBatch(msg.sender, _tokenIds, _balances);
+        _burnBatch(_msgSender(), _tokenIds, _balances);
 
         reserve = reserve.sub(burnReturn);
-        payable(msg.sender).transfer(burnReturn);
+        payable(_msgSender()).transfer(burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
     }
@@ -276,25 +285,26 @@ contract Curve is ERC1155Ex {
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
 
+        tokenId += 1;
+        _mint(_msgSender(), tokenId, _balance, "");
+
+        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
+        reserve = reserve.add(reserveCut);
+
         if (bETH) {
             // return overcharge eth
             if (_amount.sub(mintCost) > 0) {
-                payable(msg.sender).transfer(_amount.sub(mintCost));
+                payable(_msgSender()).transfer(_amount.sub(mintCost));
             }
             if (platformRate > 0) {
                 platform.transfer(platformProfit);
             }
         } else {
-            erc20.safeTransferFrom(msg.sender, address(this), mintCost);
+            erc20.safeTransferFrom(_msgSender(), address(this), mintCost);
             if (platformRate > 0) {
                 erc20.safeTransfer(platform, platformProfit);
             }
         }
-
-        uint256 tokenId = mint(msg.sender, _balance);
-
-        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
-        reserve = reserve.add(reserveCut);
 
         emit Minted(tokenId, mintCost, reserve, _balance);
 
@@ -429,7 +439,7 @@ contract Curve is ERC1155Ex {
 
     // get current supply of PASS
     function getCurrentSupply() public view returns (uint256) {
-        return totalSupply;
+        return tokenId;
     }
 
     // Bernoulli's formula for calculating the sum of intervals between the two reserves
