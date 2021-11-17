@@ -457,11 +457,11 @@ contract Curve is ERC1155 {
     // anyone can withdraw reserve of erc20 tokens/ETH to creator's beneficiary account
     function withdraw() public {
         if (address(erc20) == address(0)) {
-            creator.transfer(_getEthBalance());
-            emit Withdraw(creator, _getEthBalance());
+            creator.transfer(_getEthBalance()); // withdraw eth to beneficiary account
+            emit Withdraw(creator, _getEthBalance() - reserve);
         } else {
             erc20.safeTransfer(creator, _getErc20Balance()); // withdraw erc20 tokens to beneficiary account
-            emit Withdraw(creator, _getErc20Balance());
+            emit Withdraw(creator, _getErc20Balance() - reserve);
         }
     }
 }
