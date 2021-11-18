@@ -10,17 +10,17 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
-* @dev thePASS Bonding Curve - minting NFT through erc20 or eth
-* PASS is orgnization's erc1155 token on curve 
-* erc20 or eth is collateral token on curve 
-* Users can mint PASS via deposting erc20 collateral token into curve
-* thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
-* f(x) = PASS Price when total supply of PASS is x
-* m, slope of bonding curve
-* x = total supply of PASS 
-* N = n/d, represented by intPower when N is integer
-* v = virtual balance, Displacement of bonding curve
-*/
+ * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
+ * PASS is orgnization's erc1155 token on curve
+ * erc20 or eth is collateral token on curve
+ * Users can mint PASS via deposting erc20 collateral token into curve
+ * thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
+ * f(x) = PASS Price when total supply of PASS is x
+ * m, slope of bonding curve
+ * x = total supply of PASS
+ * N = n/d, represented by intPower when N is integer
+ * v = virtual balance, Displacement of bonding curve
+ */
 contract Curve is ERC1155Burnable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -30,6 +30,7 @@ contract Curve is ERC1155Burnable {
 
     string public name; // Contract name
     string public symbol; // Contract symbol
+    string public baseUri;
     uint256 public tokenId;
 
     IERC20 public erc20; // collateral token on bonding curve
@@ -91,6 +92,7 @@ contract Curve is ERC1155Burnable {
     ) ERC1155(_baseUri) {
         name = _name;
         symbol = _symbol;
+        baseUri = _baseUri;
 
         erc20 = IERC20(_erc20);
         m = _m;
@@ -270,6 +272,15 @@ contract Curve is ERC1155Burnable {
         payable(_msgSender()).transfer(burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
+    }
+
+    function uri(uint256 _tokenId)
+        public
+        view
+        override
+        returns (string memory)
+    {
+        return string(abi.encodePacked(baseUri, toString(_tokenId), ".json"));
     }
 
     // internal function to mint PASS
@@ -469,5 +480,30 @@ contract Curve is ERC1155Burnable {
             erc20.safeTransfer(creator, _getErc20Balance() - reserve); // withdraw erc20 tokens to beneficiary account
             emit Withdraw(creator, _getErc20Balance() - reserve);
         }
+    }
+
+    /**
+     * @dev Converts a `uint256` to its ASCII `string` decimal representation.
+     */
+    function toString(uint256 value) internal pure returns (string memory) {
+        // Inspired by OraclizeAPI's implementation - MIT licence
+        // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
+
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
     }
 }
