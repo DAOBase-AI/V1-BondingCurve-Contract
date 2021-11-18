@@ -38,6 +38,8 @@ contract Curve is ERC1155Burnable {
     // token id counter. For erc721 contract, PASS serial number = token id
     Counters.Counter private tokenIdTracker = Counters.Counter({_value: 1});
 
+    uint256 public totalSupply; // total supply of erc1155 tokens
+
     IERC20 public erc20; // collateral token on bonding curve
     uint256 private m; // slope of bonding curve
     uint256 private n; // numerator of exponent in curve power function
@@ -167,6 +169,7 @@ contract Curve is ERC1155Burnable {
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
+        totalSupply -= _balance;
         // checks if allowed to burn
         _burn(_msgSender(), _tokenId, _balance);
 
@@ -192,6 +195,9 @@ contract Curve is ERC1155Burnable {
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
+        for (uint256 i = 0; i < _tokenIds.length; ++i) {
+            totalSupply -= _balances[i];
+        }
         // checks if allowed to burn
         _burnBatch(_msgSender(), _tokenIds, _balances);
 
@@ -244,12 +250,15 @@ contract Curve is ERC1155Burnable {
             address(erc20) == address(0),
             "Curve: erc20 address is NOT null."
         );
+
+        address operator = _msgSender();
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
-        _burn(_msgSender(), _tokenId, _balance);
+        totalSupply -= _balance;
+        _burn(operator, _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
-        payable(_msgSender()).transfer(burnReturn);
+        payable(operator).transfer(burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
@@ -271,6 +280,9 @@ contract Curve is ERC1155Burnable {
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
+        for (uint256 i = 0; i < _tokenIds.length; ++i) {
+            totalSupply -= _balances[i];
+        }
         _burnBatch(_msgSender(), _tokenIds, _balances);
 
         reserve = reserve.sub(burnReturn);
@@ -288,6 +300,11 @@ contract Curve is ERC1155Burnable {
         return string(abi.encodePacked(baseUri, toString(_tokenId), ".json"));
     }
 
+    // get current supply of PASS
+    function getCurrentSupply() public view returns (uint256) {
+        return totalSupply;
+    }
+
     // internal function to mint PASS
     function _mint(
         uint256 _balance,
@@ -297,13 +314,16 @@ contract Curve is ERC1155Burnable {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough token sent");
 
+        address operator = _msgSender();
+
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
 
         tokenId = tokenIdTracker.current(); // accumulate the token id
         tokenIdTracker.increment(); // automate token id increment
 
-        _mint(_msgSender(), tokenId, _balance, "");
+        totalSupply += _balance;
+        _mint(operator, tokenId, _balance, "");
 
         uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
         reserve = reserve.add(reserveCut);
@@ -311,13 +331,13 @@ contract Curve is ERC1155Burnable {
         if (bETH) {
             // return overcharge eth
             if (_amount.sub(mintCost) > 0) {
-                payable(_msgSender()).transfer(_amount.sub(mintCost));
+                payable(operator).transfer(_amount.sub(mintCost));
             }
             if (platformRate > 0) {
                 platform.transfer(platformProfit);
             }
         } else {
-            erc20.safeTransferFrom(_msgSender(), address(this), mintCost);
+            erc20.safeTransferFrom(operator, address(this), mintCost);
             if (platformRate > 0) {
                 erc20.safeTransfer(platform, platformProfit);
             }
@@ -459,11 +479,6 @@ contract Curve is ERC1155Burnable {
             100
         );
         return totalReturn;
-    }
-
-    // get current supply of PASS
-    function getCurrentSupply() public view returns (uint256) {
-        // return tokenId;
     }
 
     // Bernoulli's formula for calculating the sum of intervals between the two reserves
