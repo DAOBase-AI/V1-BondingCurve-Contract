@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
@@ -22,6 +23,8 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
  * v = virtual balance, Displacement of bonding curve
  */
 contract Curve is ERC1155Burnable {
+    using Counters for Counters.Counter;
+
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -31,7 +34,9 @@ contract Curve is ERC1155Burnable {
     string public name; // Contract name
     string public symbol; // Contract symbol
     string public baseUri;
-    uint256 public tokenId;
+
+    // token id counter. For erc721 contract, PASS serial number = token id
+    Counters.Counter private tokenIdTracker = Counters.Counter({_value: 1});
 
     IERC20 public erc20; // collateral token on bonding curve
     uint256 private m; // slope of bonding curve
@@ -288,14 +293,16 @@ contract Curve is ERC1155Burnable {
         uint256 _balance,
         uint256 _amount,
         bool bETH
-    ) private returns (uint256) {
+    ) private returns (uint256 tokenId) {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough token sent");
 
         uint256 platformProfit = mintCost.mul(platformRate).div(100);
         uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
 
-        tokenId += 1;
+        tokenId = tokenIdTracker.current(); // accumulate the token id
+        tokenIdTracker.increment(); // automate token id increment
+
         _mint(_msgSender(), tokenId, _balance, "");
 
         uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
@@ -456,7 +463,7 @@ contract Curve is ERC1155Burnable {
 
     // get current supply of PASS
     function getCurrentSupply() public view returns (uint256) {
-        return tokenId;
+        // return tokenId;
     }
 
     // Bernoulli's formula for calculating the sum of intervals between the two reserves
