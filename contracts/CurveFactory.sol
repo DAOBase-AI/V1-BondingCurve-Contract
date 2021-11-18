@@ -17,7 +17,7 @@ contract CurveFactory is Ownable {
         uint256 _initMintPrice,
         uint256 m,
         uint256 n,
-        uint256 d,
+        uint256 d
     );
 
     constructor() {}
