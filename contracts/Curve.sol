@@ -6,23 +6,26 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "./math-utils/AnalyticMath.sol";
+import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
-* @dev thePASS Bonding Curve - minting NFT through erc20 or eth
-* PASS is orgnization's erc1155 token on curve 
-* erc20 or eth is collateral token on curve 
-* Users can mint PASS via deposting erc20 collateral token into curve
-* thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
-* f(x) = PASS Price when total supply of PASS is x
-* m, slope of bonding curve
-* x = total supply of PASS 
-* N = n/d, represented by intPower when N is integer
-* v = virtual balance, Displacement of bonding curve
-*/
+ * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
+ * PASS is orgnization's erc1155 token on curve
+ * erc20 or eth is collateral token on curve
+ * Users can mint PASS via deposting erc20 collateral token into curve
+ * thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
+ * f(x) = PASS Price when total supply of PASS is x
+ * m, slope of bonding curve
+ * x = total supply of PASS
+ * N = n/d, represented by intPower when N is integer
+ * v = virtual balance, Displacement of bonding curve
+ */
 contract Curve is ERC1155 {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    IAnalyticMath public constant ANALYTICMATH =
+        IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
 
     string public name; // Contract name
     string public symbol; // Contract symbol
@@ -43,9 +46,6 @@ contract Curve is ERC1155 {
 
     address payable public creator; // creator's commission account
     uint256 public creatorRate; // creator's commission rate in pph
-
-    IAnalyticMath public analyticMath =
-        IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
 
     event Minted(
         uint256 indexed tokenId,
@@ -354,7 +354,7 @@ contract Curve is ERC1155 {
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
                 if (decPowerCache[i] == 0) {
-                    (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
+                    (uint256 p, uint256 q) = ANALYTICMATH.pow(i, 1, n, d);
                     uint256 cost = virtualBalance.add(m.mul(p).div(q));
                     totalCost = totalCost.add(cost);
                     decPowerCache[i] = cost;
@@ -393,7 +393,7 @@ contract Curve is ERC1155 {
             }
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
-                (uint256 p, uint256 q) = analyticMath.pow(i, 1, n, d);
+                (uint256 p, uint256 q) = ANALYTICMATH.pow(i, 1, n, d);
                 uint256 cost = virtualBalance.add(m.mul(p).div(q));
                 totalCost = totalCost.add(cost);
             }
@@ -452,10 +452,10 @@ contract Curve is ERC1155 {
         uint256 _power,
         uint256 _startX,
         uint256 _endX
-    ) public view returns (uint256) {
+    ) public pure returns (uint256) {
         return
-            analyticMath.caculateIntPowerSum(_power, _endX).sub(
-                analyticMath.caculateIntPowerSum(_power, _startX - 1)
+            ANALYTICMATH.caculateIntPowerSum(_power, _endX).sub(
+                ANALYTICMATH.caculateIntPowerSum(_power, _startX - 1)
             );
     }
 
