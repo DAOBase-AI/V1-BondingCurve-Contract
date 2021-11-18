@@ -165,44 +165,46 @@ contract Curve is ERC1155Burnable {
      * _tokenId: the token id of PASS/PASSes to burn
      * _balance: the number of PASS/PASSes to burn
      */
-    function burn(uint256 _tokenId, uint256 _balance) public {
+    function burn(
+        address _account,
+        uint256 _tokenId,
+        uint256 _balance
+    ) public override {
+        // checks if allowed to burn
+        super._burn(_account, _tokenId, _balance);
+
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
         totalSupply -= _balance;
-        // checks if allowed to burn
-        _burn(_msgSender(), _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
-        erc20.safeTransfer(_msgSender(), burnReturn);
+        erc20.safeTransfer(_account, burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
 
     // allow user to burn batches of PASSes with a set of token id
-    function burnBatch(uint256[] memory _tokenIds, uint256[] memory _balances)
-        public
-    {
+    function burnBatch(
+        address _account,
+        uint256[] memory _tokenIds,
+        uint256[] memory _balances
+    ) public override {
+        // checks if allowed to burn
+        super._burnBatch(_account, _tokenIds, _balances);
+
         require(address(erc20) != address(0), "Curve: erc20 address is null.");
-        require(
-            _tokenIds.length == _balances.length,
-            "Curve: _tokenIds and _balances length mismatch."
-        );
+
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
+            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
-        for (uint256 i = 0; i < _tokenIds.length; ++i) {
-            totalSupply -= _balances[i];
-        }
-        // checks if allowed to burn
-        _burnBatch(_msgSender(), _tokenIds, _balances);
-
         reserve = reserve.sub(burnReturn);
-        erc20.safeTransfer(_msgSender(), burnReturn);
+        erc20.safeTransfer(_account, burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
     }
@@ -245,48 +247,46 @@ contract Curve is ERC1155Burnable {
      * _tokenId: the token id of PASS/PASSes to burn
      * _balance: the number of PASS/PASSes to burn
      */
-    function burnEth(uint256 _tokenId, uint256 _balance) public {
+    function burnEth(
+        address _account,
+        uint256 _tokenId,
+        uint256 _balance
+    ) public {
         require(
             address(erc20) == address(0),
             "Curve: erc20 address is NOT null."
         );
+        super._burn(_account, _tokenId, _balance);
 
-        address operator = _msgSender();
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
 
         totalSupply -= _balance;
-        _burn(operator, _tokenId, _balance);
 
         reserve = reserve.sub(burnReturn);
-        payable(operator).transfer(burnReturn);
+        payable(_account).transfer(burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
     }
 
     // allow user to burn batches of PASSes with a set of token id
     function burnBatchETH(
+        address _account,
         uint256[] memory _tokenIds,
         uint256[] memory _balances
     ) public {
         require(address(erc20) == address(0), "Curve: erc20 address is null.");
-        require(
-            _tokenIds.length == _balances.length,
-            "Curve: _tokenIds and _balances length mismatch"
-        );
+        super._burnBatch(_account, _tokenIds, _balances);
+
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
+            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
-        for (uint256 i = 0; i < _tokenIds.length; ++i) {
-            totalSupply -= _balances[i];
-        }
-        _burnBatch(_msgSender(), _tokenIds, _balances);
-
         reserve = reserve.sub(burnReturn);
-        payable(_msgSender()).transfer(burnReturn);
+        payable(_account).transfer(burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
     }
