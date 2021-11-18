@@ -4,23 +4,24 @@ pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
- * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
- * PASS is orgnization's erc1155 token on curve
- * erc20 or eth is collateral token on curve
- * Users can mint PASS via deposting erc20 collateral token into curve
- * thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
- * f(x) = PASS Price when total supply of PASS is x
- * m, slope of bonding curve
- * x = total supply of PASS
- * N = n/d, represented by intPower when N is integer
- * v = virtual balance, Displacement of bonding curve
- */
-contract Curve is ERC1155 {
+* @dev thePASS Bonding Curve - minting NFT through erc20 or eth
+* PASS is orgnization's erc1155 token on curve 
+* erc20 or eth is collateral token on curve 
+* Users can mint PASS via deposting erc20 collateral token into curve
+* thePASS Bonding Curve Formula: f(X) = m*(x^N)+v
+* f(x) = PASS Price when total supply of PASS is x
+* m, slope of bonding curve
+* x = total supply of PASS 
+* N = n/d, represented by intPower when N is integer
+* v = virtual balance, Displacement of bonding curve
+*/
+contract Curve is ERC1155Burnable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
