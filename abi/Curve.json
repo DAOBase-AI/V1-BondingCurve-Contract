@@ -289,7 +289,7 @@
   },
   {
     "inputs": [],
-    "name": "analyticMath",
+    "name": "ANALYTICMATH",
     "outputs": [
       {
         "internalType": "contract IAnalyticMath",
@@ -349,7 +349,25 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "baseUri",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "_tokenId",
@@ -369,6 +387,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "_tokenIds",
         "type": "uint256[]"
@@ -387,6 +410,11 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
+      {
         "internalType": "uint256[]",
         "name": "_tokenIds",
         "type": "uint256[]"
@@ -404,6 +432,11 @@
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_account",
+        "type": "address"
+      },
       {
         "internalType": "uint256",
         "name": "_tokenId",
@@ -446,7 +479,20 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "changeBeneficiary",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -876,7 +922,7 @@
   },
   {
     "inputs": [],
-    "name": "tokenId",
+    "name": "totalSupply",
     "outputs": [
       {
         "internalType": "uint256",
@@ -891,7 +937,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_tokenId",
         "type": "uint256"
       }
     ],

@@ -132,6 +132,12 @@ contract Curve is ERC1155Burnable {
         creatorRate = _createRate;
     }
 
+    // only contract admin can change beneficiary account
+    function changeBeneficiary(address payable _newAddress) public {
+        require(creator == _msgSender(), "caller is not the owner");
+        creator = _newAddress;
+    }
+
     /**
      * @dev each PASS minting transaction by depositing collateral erc20 tokens will create a new erc1155 token id sequentially
      * _balance: number of PASSes user want to mint
