@@ -74,25 +74,31 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
+        "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256[]",
         "name": "tokenIds",
         "type": "uint256[]"
       },
       {
-        "indexed": false,
+        "indexed": true,
         "internalType": "uint256[]",
         "name": "balances",
         "type": "uint256[]"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
         "name": "returnAmount",
         "type": "uint256"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256",
         "name": "reserveAfterBurn",
         "type": "uint256"
@@ -106,26 +112,32 @@
     "inputs": [
       {
         "indexed": true,
+        "internalType": "address",
+        "name": "account",
+        "type": "address"
+      },
+      {
+        "indexed": true,
         "internalType": "uint256",
         "name": "tokenId",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "returnAmount",
-        "type": "uint256"
-      },
-      {
-        "indexed": true,
-        "internalType": "uint256",
-        "name": "reserveAfterBurn",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
         "name": "balance",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "returnAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "reserveAfterBurn",
         "type": "uint256"
       }
     ],

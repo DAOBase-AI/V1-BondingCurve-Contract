@@ -61,16 +61,18 @@ contract Curve is ERC1155Burnable {
         uint256 creatorProfit
     );
     event Burned(
+        address indexed account,
         uint256 indexed tokenId,
-        uint256 indexed returnAmount,
-        uint256 indexed reserveAfterBurn,
-        uint256 balance
+        uint256 balance,
+        uint256 returnAmount,
+        uint256 reserveAfterBurn
     );
     event BatchBurned(
-        uint256[] tokenIds,
-        uint256[] balances,
-        uint256 indexed returnAmount,
-        uint256 indexed reserveAfterBurn
+        address indexed account,
+        uint256[] indexed tokenIds,
+        uint256[] indexed balances,
+        uint256 returnAmount,
+        uint256 reserveAfterBurn
     );
     event Withdraw(address indexed to, uint256 amount);
 
@@ -183,7 +185,7 @@ contract Curve is ERC1155Burnable {
 
         erc20.safeTransfer(_account, burnReturn);
 
-        emit Burned(_tokenId, burnReturn, reserve, _balance);
+        emit Burned(_account, _tokenId, _balance, burnReturn, reserve);
     }
 
     // allow user to burn batches of PASSes with a set of token id
@@ -207,7 +209,7 @@ contract Curve is ERC1155Burnable {
         reserve = reserve - burnReturn;
         erc20.safeTransfer(_account, burnReturn);
 
-        emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
+        emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
     }
 
     /**
@@ -266,7 +268,7 @@ contract Curve is ERC1155Burnable {
         reserve = reserve - burnReturn;
         payable(_account).transfer(burnReturn);
 
-        emit Burned(_tokenId, burnReturn, reserve, _balance);
+        emit Burned(_account, _tokenId, _balance, burnReturn, reserve);
     }
 
     // allow user to burn batches of PASSes with a set of token id
@@ -289,7 +291,7 @@ contract Curve is ERC1155Burnable {
         reserve = reserve - burnReturn;
         payable(_account).transfer(burnReturn);
 
-        emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
+        emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
     }
 
     function uri(uint256 _tokenId)

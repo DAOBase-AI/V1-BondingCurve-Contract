@@ -22,7 +22,7 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_initMintPrice",
+        "name": "initMintPrice",
         "type": "uint256"
       },
       {

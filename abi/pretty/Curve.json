@@ -1,7 +1,7 @@
 [
   "event ApprovalForAll(address indexed account, address indexed operator, bool approved)",
-  "event BatchBurned(uint256[] tokenIds, uint256[] balances, uint256 indexed returnAmount, uint256 indexed reserveAfterBurn)",
-  "event Burned(uint256 indexed tokenId, uint256 indexed returnAmount, uint256 indexed reserveAfterBurn, uint256 balance)",
+  "event BatchBurned(address indexed account, uint256[] indexed tokenIds, uint256[] indexed balances, uint256 returnAmount, uint256 reserveAfterBurn)",
+  "event Burned(address indexed account, uint256 indexed tokenId, uint256 balance, uint256 returnAmount, uint256 reserveAfterBurn)",
   "event Minted(uint256 indexed tokenId, uint256 indexed cost, uint256 indexed reserveAfterMint, uint256 balance, uint256 platformProfit, uint256 creatorProfit)",
   "event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)",
   "event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)",
