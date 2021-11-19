@@ -3,10 +3,8 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/utils/Counters.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
@@ -24,8 +22,6 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
  */
 contract Curve is ERC1155Burnable {
     using Counters for Counters.Counter;
-
-    using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     IAnalyticMath public constant ANALYTICMATH =
@@ -105,8 +101,8 @@ contract Curve is ERC1155Burnable {
         m = _m;
         n = _n;
 
-        if (_n.div(_d).mul(_d) == _n) {
-            intPower = _n.div(_d);
+        if ((_n / _d) * _d == _n) {
+            intPower = _n / _d;
         } else {
             d = _d;
         }
@@ -183,7 +179,7 @@ contract Curve is ERC1155Burnable {
 
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
         totalSupply -= _balance;
-        reserve = reserve.sub(burnReturn);
+        reserve = reserve - burnReturn;
 
         erc20.safeTransfer(_account, burnReturn);
 
@@ -208,7 +204,7 @@ contract Curve is ERC1155Burnable {
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
-        reserve = reserve.sub(burnReturn);
+        reserve = reserve - burnReturn;
         erc20.safeTransfer(_account, burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
@@ -267,7 +263,7 @@ contract Curve is ERC1155Burnable {
 
         totalSupply -= _balance;
 
-        reserve = reserve.sub(burnReturn);
+        reserve = reserve - burnReturn;
         payable(_account).transfer(burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
@@ -290,7 +286,7 @@ contract Curve is ERC1155Burnable {
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
-        reserve = reserve.sub(burnReturn);
+        reserve = reserve - burnReturn;
         payable(_account).transfer(burnReturn);
 
         emit BatchBurned(_tokenIds, _balances, burnReturn, reserve);
@@ -319,30 +315,30 @@ contract Curve is ERC1155Burnable {
         uint256 mintCost = caculateCurrentCostToMint(_balance);
         require(_amount >= mintCost, "Curve: not enough token sent");
 
-        address operator = _msgSender();
+        address account = _msgSender();
 
-        uint256 platformProfit = mintCost.mul(platformRate).div(100);
-        uint256 creatorProfit = mintCost.mul(creatorRate).div(100);
+        uint256 platformProfit = (mintCost * platformRate) / 100;
+        uint256 creatorProfit = (mintCost * creatorRate) / 100;
 
         tokenId = tokenIdTracker.current(); // accumulate the token id
         tokenIdTracker.increment(); // automate token id increment
 
         totalSupply += _balance;
-        _mint(operator, tokenId, _balance, "");
+        _mint(account, tokenId, _balance, "");
 
-        uint256 reserveCut = mintCost.sub(platformProfit).sub(creatorProfit);
-        reserve = reserve.add(reserveCut);
+        uint256 reserveCut = mintCost - platformProfit - creatorProfit;
+        reserve = reserve + reserveCut;
 
         if (bETH) {
             // return overcharge eth
-            if (_amount.sub(mintCost) > 0) {
-                payable(operator).transfer(_amount.sub(mintCost));
+            if (_amount - (mintCost) > 0) {
+                payable(account).transfer(_amount - (mintCost));
             }
             if (platformRate > 0) {
                 platform.transfer(platformProfit);
             }
         } else {
-            erc20.safeTransferFrom(operator, address(this), mintCost);
+            erc20.safeTransferFrom(account, address(this), mintCost);
             if (platformRate > 0) {
                 erc20.safeTransfer(platform, platformProfit);
             }
@@ -385,25 +381,23 @@ contract Curve is ERC1155Burnable {
                     curStartX,
                     curStartX + _balance - 1
                 );
-                totalCost = m.mul(intervalSum).add(
-                    virtualBalance.mul(_balance)
-                );
+                totalCost = m * intervalSum + (virtualBalance * _balance);
             } else {
                 for (uint256 i = curStartX; i < curStartX + _balance; i++) {
-                    totalCost = totalCost.add(
-                        m.mul(i**intPower).add(virtualBalance)
-                    );
+                    totalCost =
+                        totalCost +
+                        (m * (i**intPower) + (virtualBalance));
                 }
             }
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
                 if (decPowerCache[i] == 0) {
                     (uint256 p, uint256 q) = ANALYTICMATH.pow(i, 1, n, d);
-                    uint256 cost = virtualBalance.add(m.mul(p).div(q));
-                    totalCost = totalCost.add(cost);
+                    uint256 cost = virtualBalance + ((m * p) / q);
+                    totalCost = totalCost + cost;
                     decPowerCache[i] = cost;
                 } else {
-                    totalCost = totalCost.add(decPowerCache[i]);
+                    totalCost = totalCost + decPowerCache[i];
                 }
             }
         }
@@ -425,21 +419,19 @@ contract Curve is ERC1155Burnable {
                     curStartX,
                     curStartX + _balance - 1
                 );
-                totalCost = m.mul(intervalSum).add(
-                    virtualBalance.mul(_balance)
-                );
+                totalCost = m * (intervalSum) + (virtualBalance * _balance);
             } else {
                 for (uint256 i = curStartX; i < curStartX + _balance; i++) {
-                    totalCost = totalCost.add(
-                        m.mul(i**intPower).add(virtualBalance)
-                    );
+                    totalCost =
+                        totalCost +
+                        (m * (i**intPower) + (virtualBalance));
                 }
             }
         } else {
             for (uint256 i = curStartX; i < curStartX + _balance; i++) {
                 (uint256 p, uint256 q) = ANALYTICMATH.pow(i, 1, n, d);
-                uint256 cost = virtualBalance.add(m.mul(p).div(q));
-                totalCost = totalCost.add(cost);
+                uint256 cost = virtualBalance + ((m * p) / q);
+                totalCost = totalCost + (cost);
             }
         }
         return totalCost;
@@ -465,24 +457,20 @@ contract Curve is ERC1155Burnable {
                     curEndX - _balance + 1,
                     curEndX
                 );
-                totalReturn = m.mul(intervalSum).add(
-                    virtualBalance.mul(_balance)
-                );
+                totalReturn = m * intervalSum + (virtualBalance * (_balance));
             } else {
                 for (uint256 i = curEndX; i > curEndX - _balance; i--) {
-                    totalReturn = totalReturn.add(
-                        m.mul(i**intPower).add(virtualBalance)
-                    );
+                    totalReturn =
+                        totalReturn +
+                        (m * (i**intPower) + (virtualBalance));
                 }
             }
         } else {
             for (uint256 i = curEndX; i > curEndX - _balance; i--) {
-                totalReturn = totalReturn.add(decPowerCache[i]);
+                totalReturn = totalReturn + decPowerCache[i];
             }
         }
-        totalReturn = totalReturn.mul(100 - platformRate - creatorRate).div(
-            100
-        );
+        totalReturn = (totalReturn * (100 - platformRate - creatorRate)) / 100;
         return totalReturn;
     }
 
@@ -493,9 +481,8 @@ contract Curve is ERC1155Burnable {
         uint256 _endX
     ) public pure returns (uint256) {
         return
-            ANALYTICMATH.caculateIntPowerSum(_power, _endX).sub(
-                ANALYTICMATH.caculateIntPowerSum(_power, _startX - 1)
-            );
+            ANALYTICMATH.caculateIntPowerSum(_power, _endX) -
+            ANALYTICMATH.caculateIntPowerSum(_power, _startX - 1);
     }
 
     // anyone can withdraw reserve of erc20 tokens/ETH to creator's beneficiary account
