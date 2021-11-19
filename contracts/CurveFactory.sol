@@ -14,7 +14,7 @@ contract CurveFactory is Ownable {
     event CurveCreated(
         address indexed owner,
         address indexed curveAddr,
-        uint256 _initMintPrice,
+        uint256 initMintPrice,
         uint256 m,
         uint256 n,
         uint256 d
