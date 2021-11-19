@@ -298,7 +298,7 @@ contract Curve is ERC1155Burnable {
         override
         returns (string memory)
     {
-        return string(abi.encodePacked(baseUri, toString(_tokenId), ".json"));
+        return string(abi.encodePacked(baseUri, toString(_tokenId)));
     }
 
     // get current supply of PASS
