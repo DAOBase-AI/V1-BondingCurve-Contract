@@ -176,15 +176,15 @@ contract Curve is ERC1155Burnable {
         uint256 _tokenId,
         uint256 _balance
     ) public override {
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
+
         // checks if allowed to burn
         super._burn(_account, _tokenId, _balance);
 
-        require(address(erc20) != address(0), "Curve: erc20 address is null.");
         uint256 burnReturn = getCurrentReturnToBurn(_balance);
-
         totalSupply -= _balance;
-
         reserve = reserve.sub(burnReturn);
+
         erc20.safeTransfer(_account, burnReturn);
 
         emit Burned(_tokenId, burnReturn, reserve, _balance);
@@ -196,10 +196,10 @@ contract Curve is ERC1155Burnable {
         uint256[] memory _tokenIds,
         uint256[] memory _balances
     ) public override {
+        require(address(erc20) != address(0), "Curve: erc20 address is null.");
+
         // checks if allowed to burn
         super._burnBatch(_account, _tokenIds, _balances);
-
-        require(address(erc20) != address(0), "Curve: erc20 address is null.");
 
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
@@ -208,7 +208,6 @@ contract Curve is ERC1155Burnable {
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
-
         reserve = reserve.sub(burnReturn);
         erc20.safeTransfer(_account, burnReturn);
 
