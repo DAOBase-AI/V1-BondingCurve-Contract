@@ -6,16 +6,14 @@
 const hre = require('hardhat')
 
 async function main() {
-  // Deploy deployers
-  const CurveFactory = await hre.ethers.getContractFactory('CurveFactory')
-  const curveFactory = await CurveFactory.deploy()
-  await curveFactory.deployed()
+  const AnalyticMathFactory = await hre.ethers.getContractFactory(
+    'AnalyticMath'
+  )
+  const analyticMath = await AnalyticMathFactory.deploy()
+  await analyticMath.deployed()
+  await analyticMath.init()
 
-  console.log('curveFactory address: ' + curveFactory.address)
-
-  await hre.run('verify:verify', {
-    address: curveFactory.address,
-  })
+  console.log('analyticMath address: ' + analyticMath.address)
 }
 
 main()

@@ -25,7 +25,7 @@ contract Curve is ERC1155Burnable {
     using SafeERC20 for IERC20;
 
     IAnalyticMath public constant ANALYTICMATH =
-        IAnalyticMath(0xd8b934580fcE35a11B58C6D73aDeE468a2833fa8); // Mathmatical method for calculating power function
+        IAnalyticMath(0x350b9F764f13D12bc7765890e5a94FA02B3d1Ac8); // Mathmatical method for calculating power function
 
     string public name; // Contract name
     string public symbol; // Contract symbol
