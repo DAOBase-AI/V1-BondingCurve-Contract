@@ -124,6 +124,9 @@ contract Curve is ERC1155Burnable {
             platform == address(0) && creator == address(0),
             "Curve: commission account and rate cannot be modified."
         );
+        require(_platform != address(0), "Curve: platform address is zero");
+        require(_creator != address(0), "Curve: platform address zero");
+
         platform = _platform;
         platformRate = _platformRate;
         creator = _creator;
@@ -132,7 +135,8 @@ contract Curve is ERC1155Burnable {
 
     // only contract admin can change beneficiary account
     function changeBeneficiary(address payable _newAddress) public {
-        require(creator == _msgSender(), "caller is not the owner");
+        require(creator == _msgSender(), "Curve: caller is not the owner");
+        require(_newAddress != address(0), "Curve: new address is zero");
         creator = _newAddress;
     }
 
