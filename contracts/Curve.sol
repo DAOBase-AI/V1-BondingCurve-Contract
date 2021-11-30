@@ -37,11 +37,11 @@ contract Curve is ERC1155Burnable {
     uint256 public totalSupply; // total supply of erc1155 tokens
 
     IERC20 public erc20; // collateral token on bonding curve
-    uint256 private m; // slope of bonding curve
-    uint256 private n; // numerator of exponent in curve power function
-    uint256 private d; // denominator of exponent in curve power function
-    uint256 private intPower; // when n/d is integer
-    uint256 private virtualBalance; // vitual balance for setting a reasonable initial price
+    uint256 public m; // slope of bonding curve
+    uint256 public n; // numerator of exponent in curve power function
+    uint256 public d; // denominator of exponent in curve power function
+    uint256 public intPower; // when n/d is integer
+    uint256 public virtualBalance; // vitual balance for setting a reasonable initial price
 
     mapping(uint256 => uint256) public decPowerCache; // cache of power function calculation result when exponent is decimal，n => cost
     uint256 public reserve; // reserve of collateral tokens stored in bonding curve AMM pool
