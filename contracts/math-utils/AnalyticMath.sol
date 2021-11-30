@@ -1,17 +1,11 @@
 // SPDX-License-Identifier:  MIT
 pragma solidity 0.8.6;
 
+import "./interfaces/IAnalyticMath.sol";
 import "./IntegralMath.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-interface IAnalyticMath {
-    /**
-      * @dev Compute (a / b) ^ (c / d)
-    */
-    function pow(uint256 a, uint256 b, uint256 c, uint256 d) external view returns (uint256, uint256);
-    function caculateIntPowerSum(uint256 power, uint256 n) pure external returns (uint256);
-}
-contract AnalyticMath {
+contract AnalyticMath is IAnalyticMath {
     using IntegralMath for *;
     using SafeMath for uint256;
 
@@ -41,7 +35,7 @@ contract AnalyticMath {
     /**
       * @dev Compute (a / b) ^ (c / d)
     */
-    function pow(uint256 a, uint256 b, uint256 c, uint256 d) public view returns (uint256, uint256) { unchecked {
+    function pow(uint256 a, uint256 b, uint256 c, uint256 d) public view override returns (uint256, uint256) { unchecked {
         if (a >= b)
             return mulDivExp(mulDivLog(FIXED_1, a, b), c, d);
         (uint256 q, uint256 p) = mulDivExp(mulDivLog(FIXED_1, b, a), c, d);
@@ -59,7 +53,7 @@ contract AnalyticMath {
     // 8: (10*n^9 + 45*n^8 + 60*n^7 - 42*n^5 + 20*n^3 - 3*n)/90     
     // 9: (2*n^10 + 10*n^9 + 15*n^8 - 14*n^6 + 10*n^4 - 3*n^2)/20   
     // 10: (6*n^11 + 33*n^10 + 55*n^9 - 66*n^7 + 66*n^5 - 33*n^3 + 5*n)/66  
-    function caculateIntPowerSum(uint256 power, uint256 n) pure public returns (uint256) {
+    function caculateIntPowerSum(uint256 power, uint256 n) public pure override returns (uint256) {
         if (n == 0) return 0;
         if (n == 1) return 1;
         if (power == 1) {
