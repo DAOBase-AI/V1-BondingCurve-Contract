@@ -9,7 +9,7 @@ contract CurveFactory is Ownable {
     uint256 private totalRateLimit = 50;
 
     address payable public platform; // platform commision account
-    uint256 public platformRate = 1; // % of total minting cost as platform commission
+    uint256 public platformRate; // % of total minting cost as platform commission
 
     event CurveCreated(
         address indexed owner,
@@ -20,7 +20,10 @@ contract CurveFactory is Ownable {
         uint256 d
     );
 
-    constructor() {}
+    constructor(address payable _platform, uint256 _platformRate) {
+        platform = _platform;
+        platformRate = _platformRate;
+    }
 
     // set up the platform commission account and platform commission rate, only operable by contract owner, _platformRate is in pph
     function setPlatformParms(address payable _platform, uint256 _platformRate)
