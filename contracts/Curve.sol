@@ -125,7 +125,7 @@ contract Curve is ERC1155Burnable {
             "Curve: commission account and rate cannot be modified."
         );
         require(_platform != address(0), "Curve: platform address is zero");
-        require(_creator != address(0), "Curve: platform address zero");
+        require(_creator != address(0), "Curve: creator address is zero");
 
         platform = _platform;
         platformRate = _platformRate;
@@ -341,11 +341,13 @@ contract Curve is ERC1155Burnable {
                 payable(account).transfer(_amount - (mintCost));
             }
             if (platformRate > 0) {
+                require(platform != address(0), "Curve: platform address is zero.");
                 platform.transfer(platformProfit);
             }
         } else {
             erc20.safeTransferFrom(account, address(this), mintCost);
             if (platformRate > 0) {
+                require(platform != address(0), "Curve: platform address is zero.");
                 erc20.safeTransfer(platform, platformProfit);
             }
         }
@@ -493,6 +495,7 @@ contract Curve is ERC1155Burnable {
 
     // anyone can withdraw reserve of erc20 tokens/ETH to creator's beneficiary account
     function withdraw() public {
+        require(creator != address(0), "Curve: creator address is zero.");
         if (address(erc20) == address(0)) {
             creator.transfer(_getEthBalance() - reserve); // withdraw eth to beneficiary account
             emit Withdraw(creator, _getEthBalance() - reserve);

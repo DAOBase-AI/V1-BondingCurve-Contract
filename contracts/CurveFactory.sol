@@ -21,6 +21,7 @@ contract CurveFactory is Ownable {
     );
 
     constructor(address payable _platform, uint256 _platformRate) {
+        require(platform != address(0), "Curve: platform address is zero.");
         platform = _platform;
         platformRate = _platformRate;
     }
@@ -30,6 +31,7 @@ contract CurveFactory is Ownable {
         public
         onlyOwner
     {
+        require(_platform != address(0), "Curve: platform address is zero.");
         platform = _platform;
         platformRate = _platformRate;
     }
