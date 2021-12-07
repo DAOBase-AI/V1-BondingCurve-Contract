@@ -90,7 +90,7 @@ contract Curve is ERC1155Burnable {
         address[] memory addrs, //[0] _platform, [1]: _creator, [2]: _erc20
         uint256[] memory parms //[0]_platformRate, [1]: _creatorRate, [2]: _initMintPrice, [3]: _m, [4]: _n, [5]: _d
     ) ERC1155(infos[2]) {
-        setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
+        _setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
 
         setFeeParameters(
             payable(addrs[0]),
@@ -99,35 +99,7 @@ contract Curve is ERC1155Burnable {
             parms[1]
         );
 
-        setCurveParms(parms[2], parms[3], parms[4], parms[5]);
-    }
-
-    function setBasicInfo(
-        string memory _name,
-        string memory _symbol,
-        string memory _baseUri,
-        address _erc20
-    ) private {
-        name = _name;
-        symbol = _symbol;
-        baseUri = _baseUri;
-        erc20 = IERC20(_erc20);
-    }
-
-    function setCurveParms(
-        uint256 _initMintPrice,
-        uint256 _m,
-        uint256 _n,
-        uint256 _d
-    ) private {
-        if ((_n / _d) * _d == _n) {
-            intPower = _n / _d;
-        } else {
-            d = _d;
-        }
-
-        virtualBalance = _initMintPrice - _m;
-        reserve = 0;
+        _setCurveParms(parms[2], parms[3], parms[4], parms[5]);
     }
 
     // @creator commission account and rate initilization
@@ -526,6 +498,36 @@ contract Curve is ERC1155Burnable {
             erc20.safeTransfer(creator, _getErc20Balance() - reserve); // withdraw erc20 tokens to beneficiary account
             emit Withdraw(creator, _getErc20Balance() - reserve);
         }
+    }
+
+    function _setBasicInfo(
+        string memory _name,
+        string memory _symbol,
+        string memory _baseUri,
+        address _erc20
+    ) internal {
+        name = _name;
+        symbol = _symbol;
+        baseUri = _baseUri;
+        erc20 = IERC20(_erc20);
+    }
+
+    function _setCurveParms(
+        uint256 _initMintPrice,
+        uint256 _m,
+        uint256 _n,
+        uint256 _d
+    ) internal {
+        m = _m;
+        n = _n;
+        if ((_n / _d) * _d == _n) {
+            intPower = _n / _d;
+        } else {
+            d = _d;
+        }
+
+        virtualBalance = _initMintPrice - _m;
+        reserve = 0;
     }
 
     /**
