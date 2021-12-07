@@ -1,6 +1,17 @@
 [
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_platform",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_platformRate",
+        "type": "uint256"
+      }
+    ],
     "stateMutability": "nonpayable",
     "type": "constructor"
   },
@@ -79,6 +90,11 @@
         "type": "string"
       },
       {
+        "internalType": "string",
+        "name": "_baseUri",
+        "type": "string"
+      },
+      {
         "internalType": "address payable",
         "name": "_creator",
         "type": "address"
@@ -112,11 +128,6 @@
         "internalType": "uint256",
         "name": "_d",
         "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "_baseUri",
-        "type": "string"
       }
     ],
     "name": "createCurve",

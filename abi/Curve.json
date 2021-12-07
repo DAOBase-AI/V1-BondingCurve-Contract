@@ -2,44 +2,19 @@
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_name",
-        "type": "string"
+        "internalType": "string[]",
+        "name": "infos",
+        "type": "string[]"
       },
       {
-        "internalType": "string",
-        "name": "_symbol",
-        "type": "string"
+        "internalType": "address[]",
+        "name": "addrs",
+        "type": "address[]"
       },
       {
-        "internalType": "string",
-        "name": "_baseUri",
-        "type": "string"
-      },
-      {
-        "internalType": "address",
-        "name": "_erc20",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_initMintPrice",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_m",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_n",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_d",
-        "type": "uint256"
+        "internalType": "uint256[]",
+        "name": "parms",
+        "type": "uint256[]"
       }
     ],
     "stateMutability": "nonpayable",
@@ -142,6 +117,19 @@
       }
     ],
     "name": "Burned",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "cooldownStartTimestamp",
+        "type": "uint256"
+      }
+    ],
+    "name": "ChangeBeneficiaryUnlock",
     "type": "event"
   },
   {
@@ -307,6 +295,32 @@
         "internalType": "contract IAnalyticMath",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "COOLDOWN_SECONDS",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "UNSTAKE_WINDOW",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -509,6 +523,26 @@
   },
   {
     "inputs": [],
+    "name": "changeBeneficiaryUnlock",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cooldownStartTimestamp",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "creator",
     "outputs": [
       {
@@ -523,6 +557,19 @@
   {
     "inputs": [],
     "name": "creatorRate",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "d",
     "outputs": [
       {
         "internalType": "uint256",
@@ -617,6 +664,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "intPower",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -635,6 +695,19 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "m",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -734,6 +807,19 @@
       }
     ],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "n",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -959,6 +1045,19 @@
         "internalType": "string",
         "name": "",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "virtualBalance",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",

@@ -27,6 +27,12 @@ contract Curve is ERC1155Burnable {
     IAnalyticMath public constant ANALYTICMATH =
         IAnalyticMath(0x350b9F764f13D12bc7765890e5a94FA02B3d1Ac8); // Mathmatical method for calculating power function
 
+    uint256 public immutable COOLDOWN_SECONDS = 7 days;
+
+    /// @notice Seconds available to redeem once the cooldown period is fullfilled
+    uint256 public immutable UNSTAKE_WINDOW = 3 days;
+    uint256 public cooldownStartTimestamp;
+
     string public name; // Contract name
     string public symbol; // Contract symbol
     string public baseUri;
@@ -52,6 +58,7 @@ contract Curve is ERC1155Burnable {
     address payable public creator; // creator's commission account
     uint256 public creatorRate; // creator's commission rate in pph
 
+    event ChangeBeneficiaryUnlock(uint256 cooldownStartTimestamp);
     event Minted(
         uint256 indexed tokenId,
         uint256 indexed cost,
@@ -126,7 +133,31 @@ contract Curve is ERC1155Burnable {
     function changeBeneficiary(address payable _newAddress) public {
         require(creator == _msgSender(), "Curve: caller is not the owner");
         require(_newAddress != address(0), "Curve: new address is zero");
+
+        require(
+            block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
+            "INSUFFICIENT_COOLDOWN"
+        );
+        require(
+            block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
+                UNSTAKE_WINDOW,
+            "UNSTAKE_WINDOW_FINISHED"
+        );
+
         creator = _newAddress;
+
+        // clear cooldown after changeBeneficiary
+        if (cooldownStartTimestamp != 0) {
+            cooldownStartTimestamp = 0;
+        }
+    }
+
+    // only contract admin can change beneficiary account
+    function changeBeneficiaryUnlock() public {
+        require(creator == _msgSender(), "Curve: caller is not the owner");
+        cooldownStartTimestamp = block.timestamp;
+
+        emit ChangeBeneficiaryUnlock(block.timestamp);
     }
 
     /**
