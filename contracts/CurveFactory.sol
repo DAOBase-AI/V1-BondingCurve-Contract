@@ -54,31 +54,40 @@ contract CurveFactory is Ownable {
     function createCurve(
         string memory _name,
         string memory _symbol,
+        string memory _baseUri,
         address payable _creator,
         uint256 _creatorRate,
         uint256 _initMintPrice,
         address _erc20,
         uint256 _m,
         uint256 _n,
-        uint256 _d,
-        string memory _baseUri
+        uint256 _d
     ) public {
+        // require(info.length == 3 && parms.length == 4);
         require(
             _creatorRate <= totalRateLimit - platformRate,
             "Curve: creator's commission rate is too high."
         );
-        Curve curve = new Curve(
-            _name,
-            _symbol,
-            _baseUri,
-            _erc20,
-            _initMintPrice,
-            _m,
-            _n,
-            _d
-        );
-        curve.setFeeParameters(platform, platformRate, _creator, _creatorRate);
-        address curveAddr = address(curve); // get contract address of created curve
+
+        string[] memory infos = new string[](3);
+        infos[0] = _name;
+        infos[1] = _symbol;
+        infos[2] = _baseUri;
+
+        address[] memory addrs = new address[](3);
+        addrs[0] = platform;
+        addrs[1] = _creator;
+        addrs[2] = _erc20;
+
+        uint256[] memory parms = new uint256[](6);
+        parms[0] = platformRate;
+        parms[1] = _creatorRate;
+        parms[2] = _initMintPrice;
+        parms[3] = _m;
+        parms[4] = _n;
+        parms[5] = _d;
+
+        address curveAddr = address(new Curve(infos, addrs, parms));
         emit CurveCreated(msg.sender, curveAddr, _initMintPrice, _m, _n, _d);
     }
 }

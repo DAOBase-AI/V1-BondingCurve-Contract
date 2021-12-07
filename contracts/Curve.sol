@@ -86,23 +86,40 @@ contract Curve is ERC1155Burnable {
      * reserve: reserve of collateral tokens stored in bonding curve AMM pool, start with 0
      */
     constructor(
+        string[] memory infos, //[0]: _name,[1]: _symbol,[2]: _baseUri
+        address[] memory addrs, //[0] _platform, [1]: _creator, [2]: _erc20
+        uint256[] memory parms //[0]_platformRate, [1]: _creatorRate, [2]: _initMintPrice, [3]: _m, [4]: _n, [5]: _d
+    ) ERC1155(infos[2]) {
+        setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
+
+        setFeeParameters(
+            payable(addrs[0]),
+            parms[0],
+            payable(addrs[1]),
+            parms[1]
+        );
+
+        setCurveParms(parms[2], parms[3], parms[4], parms[5]);
+    }
+
+    function setBasicInfo(
         string memory _name,
         string memory _symbol,
         string memory _baseUri,
-        address _erc20,
+        address _erc20
+    ) private {
+        name = _name;
+        symbol = _symbol;
+        baseUri = _baseUri;
+        erc20 = IERC20(_erc20);
+    }
+
+    function setCurveParms(
         uint256 _initMintPrice,
         uint256 _m,
         uint256 _n,
         uint256 _d
-    ) ERC1155(_baseUri) {
-        name = _name;
-        symbol = _symbol;
-        baseUri = _baseUri;
-
-        erc20 = IERC20(_erc20);
-        m = _m;
-        n = _n;
-
+    ) private {
         if ((_n / _d) * _d == _n) {
             intPower = _n / _d;
         } else {
@@ -341,13 +358,19 @@ contract Curve is ERC1155Burnable {
                 payable(account).transfer(_amount - (mintCost));
             }
             if (platformRate > 0) {
-                require(platform != address(0), "Curve: platform address is zero.");
+                require(
+                    platform != address(0),
+                    "Curve: platform address is zero."
+                );
                 platform.transfer(platformProfit);
             }
         } else {
             erc20.safeTransferFrom(account, address(this), mintCost);
             if (platformRate > 0) {
-                require(platform != address(0), "Curve: platform address is zero.");
+                require(
+                    platform != address(0),
+                    "Curve: platform address is zero."
+                );
                 erc20.safeTransfer(platform, platformProfit);
             }
         }
