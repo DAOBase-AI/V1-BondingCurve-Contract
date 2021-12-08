@@ -27,10 +27,10 @@ contract Curve is ERC1155Burnable {
     IAnalyticMath public constant ANALYTICMATH =
         IAnalyticMath(0x350b9F764f13D12bc7765890e5a94FA02B3d1Ac8); // Mathmatical method for calculating power function
 
-    uint256 public immutable COOLDOWN_SECONDS = 7 days;
+    uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
     /// @notice Seconds available to redeem once the cooldown period is fullfilled
-    uint256 public immutable UNSTAKE_WINDOW = 3 days;
+    uint256 public immutable UNSTAKE_WINDOW = 1 days;
     uint256 public cooldownStartTimestamp;
 
     string public name; // Contract name
