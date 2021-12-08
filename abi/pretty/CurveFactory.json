@@ -6,7 +6,7 @@
   "function COOLDOWN_SECONDS() view returns (uint256)",
   "function OPERATE_WINDOW() view returns (uint256)",
   "function cooldownStartTimestamp() view returns (uint256)",
-  "function createCurve(string _name, string _symbol, address _creator, uint256 _creatorRate, uint256 _initMintPrice, address _erc20, uint256 _m, uint256 _n, uint256 _d, string _baseUri)",
+  "function createCurve(string _name, string _symbol, address _receivingAddress, uint256 _creatorRate, uint256 _initMintPrice, address _erc20, uint256 _m, uint256 _n, uint256 _d, string _baseUri)",
   "function owner() view returns (address)",
   "function platform() view returns (address)",
   "function platformRate() view returns (uint256)",

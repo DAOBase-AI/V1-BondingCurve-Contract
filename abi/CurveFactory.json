@@ -173,7 +173,7 @@
       },
       {
         "internalType": "address payable",
-        "name": "_creator",
+        "name": "_receivingAddress",
         "type": "address"
       },
       {

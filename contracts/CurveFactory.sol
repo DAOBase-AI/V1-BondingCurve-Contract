@@ -91,8 +91,8 @@ contract CurveFactory is Ownable {
 
     /**
      * @dev creation of bonding curve with formular: f(x)=m*(x^N)+v
-     * _creator: creator's commission account
-     * _creatorRate: creator's commission rate
+     * _receivingAddress: receivingAddress's commission account
+     * _creatorRate: receivingAddress's commission rate
      * _initMintPrice: f(1) = m + v, the first PASS minting price
      * _erc20: collateral token(erc20) for miniting PASS on bonding curve, send 0x000...000 to appoint it as ETH instead of erc20 token
      * _m: m, slope of curve
@@ -102,7 +102,7 @@ contract CurveFactory is Ownable {
     function createCurve(
         string memory _name,
         string memory _symbol,
-        address payable _creator,
+        address payable _receivingAddress,
         uint256 _creatorRate,
         uint256 _initMintPrice,
         address _erc20,
@@ -114,7 +114,7 @@ contract CurveFactory is Ownable {
         // require(info.length == 3 && parms.length == 4);
         require(
             _creatorRate <= totalRateLimit - platformRate,
-            "Curve: creator's commission rate is too high."
+            "Curve: receivingAddress's commission rate is too high."
         );
 
         string[] memory infos = new string[](3);
@@ -124,7 +124,7 @@ contract CurveFactory is Ownable {
 
         address[] memory addrs = new address[](3);
         addrs[0] = platform;
-        addrs[1] = _creator;
+        addrs[1] = _receivingAddress;
         addrs[2] = _erc20;
 
         uint256[] memory parms = new uint256[](6);

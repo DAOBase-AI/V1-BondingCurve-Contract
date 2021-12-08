@@ -2,6 +2,7 @@
 
 pragma solidity 0.8.6;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -20,7 +21,7 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
  * N = n/d, represented by intPower when N is integer
  * v = virtual balance, Displacement of bonding curve
  */
-contract Curve is ERC1155Burnable {
+contract Curve is Ownable, ERC1155Burnable {
     using Counters for Counters.Counter;
     using SafeERC20 for IERC20;
 
@@ -56,8 +57,8 @@ contract Curve is ERC1155Burnable {
     address payable public platform; // thePass platform's commission account
     uint256 public platformRate; // thePass platform's commission rate in pph
 
-    address payable public creator; // creator's commission account
-    uint256 public creatorRate; // creator's commission rate in pph
+    address payable public receivingAddress; // receivingAddress's commission account
+    uint256 public creatorRate; // receivingAddress's commission rate in pph
 
     event ChangeBeneficiaryUnlock(uint256 cooldownStartTimestamp);
     event Minted(
@@ -95,12 +96,12 @@ contract Curve is ERC1155Burnable {
      */
     constructor(
         string[] memory infos, //[0]: _name,[1]: _symbol,[2]: _baseUri
-        address[] memory addrs, //[0] _platform, [1]: _creator, [2]: _erc20
+        address[] memory addrs, //[0] _platform, [1]: _receivingAddress, [2]: _erc20
         uint256[] memory parms //[0]_platformRate, [1]: _creatorRate, [2]: _initMintPrice, [3]: _m, [4]: _n, [5]: _d
     ) ERC1155(infos[2]) {
         _setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
 
-        setFeeParameters(
+        _setFeeParameters(
             payable(addrs[0]),
             parms[0],
             payable(addrs[1]),
@@ -110,29 +111,27 @@ contract Curve is ERC1155Burnable {
         _setCurveParms(parms[2], parms[3], parms[4], parms[5]);
     }
 
-    // @creator commission account and rate initilization
-    function setFeeParameters(
+    // @receivingAddress commission account and rate initilization
+    function _setFeeParameters(
         address payable _platform,
         uint256 _platformRate,
-        address payable _creator,
+        address payable _receivingAddress,
         uint256 _createRate
-    ) public {
-        require(
-            platform == address(0) && creator == address(0),
-            "Curve: commission account and rate cannot be modified."
-        );
+    ) internal {
         require(_platform != address(0), "Curve: platform address is zero");
-        require(_creator != address(0), "Curve: creator address is zero");
+        require(
+            _receivingAddress != address(0),
+            "Curve: receivingAddress address is zero"
+        );
 
         platform = _platform;
         platformRate = _platformRate;
-        creator = _creator;
+        receivingAddress = _receivingAddress;
         creatorRate = _createRate;
     }
 
     // only contract admin can change beneficiary account
-    function changeBeneficiary(address payable _newAddress) public {
-        require(creator == _msgSender(), "Curve: caller is not the owner");
+    function changeBeneficiary(address payable _newAddress) public onlyOwner {
         require(_newAddress != address(0), "Curve: new address is zero");
 
         require(
@@ -145,7 +144,7 @@ contract Curve is ERC1155Burnable {
             "OPERATE_WINDOW_FINISHED"
         );
 
-        creator = _newAddress;
+        receivingAddress = _newAddress;
 
         // clear cooldown after changeBeneficiary
         if (cooldownStartTimestamp != 0) {
@@ -154,8 +153,7 @@ contract Curve is ERC1155Burnable {
     }
 
     // unlock changeBeneficiary function
-    function changeBeneficiaryUnlock() public {
-        require(creator == _msgSender(), "Curve: caller is not the owner");
+    function changeBeneficiaryUnlock() public onlyOwner {
         cooldownStartTimestamp = block.timestamp;
 
         emit ChangeBeneficiaryUnlock(block.timestamp);
@@ -520,15 +518,18 @@ contract Curve is ERC1155Burnable {
             ANALYTICMATH.caculateIntPowerSum(_power, _startX - 1);
     }
 
-    // anyone can withdraw reserve of erc20 tokens/ETH to creator's beneficiary account
+    // anyone can withdraw reserve of erc20 tokens/ETH to receivingAddress's beneficiary account
     function withdraw() public {
-        require(creator != address(0), "Curve: creator address is zero.");
+        require(
+            receivingAddress != address(0),
+            "Curve: receivingAddress address is zero."
+        );
         if (address(erc20) == address(0)) {
-            creator.transfer(_getEthBalance() - reserve); // withdraw eth to beneficiary account
-            emit Withdraw(creator, _getEthBalance() - reserve);
+            receivingAddress.transfer(_getEthBalance() - reserve); // withdraw eth to beneficiary account
+            emit Withdraw(receivingAddress, _getEthBalance() - reserve);
         } else {
-            erc20.safeTransfer(creator, _getErc20Balance() - reserve); // withdraw erc20 tokens to beneficiary account
-            emit Withdraw(creator, _getErc20Balance() - reserve);
+            erc20.safeTransfer(receivingAddress, _getErc20Balance() - reserve); // withdraw erc20 tokens to beneficiary account
+            emit Withdraw(receivingAddress, _getErc20Balance() - reserve);
         }
     }
 
