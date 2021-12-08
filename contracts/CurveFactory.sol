@@ -75,7 +75,7 @@ contract CurveFactory is Ownable {
         address payable _platform,
         uint256 _platformRate,
         uint256 _totalRateLimit
-    ) internal onlyOwner {
+    ) internal {
         require(_platform != address(0), "Curve: platform address is zero.");
         require(
             _totalRateLimit <= 100 && _totalRateLimit >= _platformRate,
