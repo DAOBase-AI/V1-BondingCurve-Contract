@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Curve.sol";
 
 contract CurveFactory is Ownable {
-    uint256 private totalRateLimit = 50;
+    uint256 private totalRateLimit = 20;
 
     address payable public platform; // platform commision account
     uint256 public platformRate; // % of total minting cost as platform commission
