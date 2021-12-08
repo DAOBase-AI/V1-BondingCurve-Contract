@@ -153,7 +153,7 @@ contract Curve is ERC1155Burnable {
         }
     }
 
-    // only contract admin can change beneficiary account
+    // unlock changeBeneficiary function
     function changeBeneficiaryUnlock() public {
         require(creator == _msgSender(), "Curve: caller is not the owner");
         cooldownStartTimestamp = block.timestamp;

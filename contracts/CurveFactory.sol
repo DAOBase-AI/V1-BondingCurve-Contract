@@ -6,10 +6,15 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./Curve.sol";
 
 contract CurveFactory is Ownable {
-    uint256 private totalRateLimit = 20;
+    uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
+    /// @notice Seconds available to operate once the cooldown period is fullfilled
+    uint256 public immutable OPERATE_WINDOW = 1 days;
+
+    uint256 public cooldownStartTimestamp;
     address payable public platform; // platform commision account
     uint256 public platformRate; // % of total minting cost as platform commission
+    uint256 public totalRateLimit;
 
     event CurveCreated(
         address indexed owner,
@@ -19,26 +24,69 @@ contract CurveFactory is Ownable {
         uint256 n,
         uint256 d
     );
+    event SetPlatformParms(
+        address payable _platform,
+        uint256 _platformRate,
+        uint256 _totalRateLimit
+    );
+    event SetPlatformParmsUnlock(uint256 cooldownStartTimestamp);
 
-    constructor(address payable _platform, uint256 _platformRate) {
-        require(platform != address(0), "Curve: platform address is zero.");
-        platform = _platform;
-        platformRate = _platformRate;
+    constructor(
+        address payable _platform,
+        uint256 _platformRate,
+        uint256 _totalRateLimit
+    ) {
+        _setPlatformParms(_platform, _platformRate, _totalRateLimit);
+    }
+
+    // unlock setPlatformParms function
+    function setPlatformParmsUnlock() public onlyOwner {
+        cooldownStartTimestamp = block.timestamp;
+        emit SetPlatformParmsUnlock(block.timestamp);
     }
 
     // set up the platform commission account and platform commission rate, only operable by contract owner, _platformRate is in pph
-    function setPlatformParms(address payable _platform, uint256 _platformRate)
-        public
-        onlyOwner
-    {
-        require(_platform != address(0), "Curve: platform address is zero.");
-        platform = _platform;
-        platformRate = _platformRate;
+    // set the limit of total commission rate, only operable by contract owner, _totalRateLimit is in pph
+    function setPlatformParms(
+        address payable _platform,
+        uint256 _platformRate,
+        uint256 _totalRateLimit
+    ) public onlyOwner {
+        require(
+            block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
+            "INSUFFICIENT_COOLDOWN"
+        );
+        require(
+            block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
+                OPERATE_WINDOW,
+            "OPERATE_WINDOW_FINISHED"
+        );
+
+        _setPlatformParms(_platform, _platformRate, _totalRateLimit);
+
+        // clear cooldown after changeBeneficiary
+        if (cooldownStartTimestamp != 0) {
+            cooldownStartTimestamp = 0;
+        }
     }
 
-    // set the limit of total commission rate, only operable by contract owner, _totalRateLimit is in pph
-    function setTotalRateLimit(uint256 _totalRateLimit) public onlyOwner {
+    // set up the platform parameters internal
+    function _setPlatformParms(
+        address payable _platform,
+        uint256 _platformRate,
+        uint256 _totalRateLimit
+    ) internal onlyOwner {
+        require(_platform != address(0), "Curve: platform address is zero.");
+        require(
+            _totalRateLimit <= 100 && _totalRateLimit >= _platformRate,
+            "Curve: wrong rate"
+        );
+
+        platform = _platform;
+        platformRate = _platformRate;
         totalRateLimit = _totalRateLimit;
+
+        emit SetPlatformParms(_platform, _platformRate, _totalRateLimit);
     }
 
     /**
@@ -54,14 +102,14 @@ contract CurveFactory is Ownable {
     function createCurve(
         string memory _name,
         string memory _symbol,
-        string memory _baseUri,
         address payable _creator,
         uint256 _creatorRate,
         uint256 _initMintPrice,
         address _erc20,
         uint256 _m,
         uint256 _n,
-        uint256 _d
+        uint256 _d,
+        string memory _baseUri
     ) public {
         // require(info.length == 3 && parms.length == 4);
         require(
