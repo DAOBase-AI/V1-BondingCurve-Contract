@@ -29,8 +29,9 @@ contract Curve is ERC1155Burnable {
 
     uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
-    /// @notice Seconds available to redeem once the cooldown period is fullfilled
-    uint256 public immutable UNSTAKE_WINDOW = 1 days;
+    /// @notice Seconds available to operate once the cooldown period is fullfilled
+    uint256 public immutable OPERATE_WINDOW = 1 days;
+
     uint256 public cooldownStartTimestamp;
 
     string public name; // Contract name
@@ -140,8 +141,8 @@ contract Curve is ERC1155Burnable {
         );
         require(
             block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-                UNSTAKE_WINDOW,
-            "UNSTAKE_WINDOW_FINISHED"
+                OPERATE_WINDOW,
+            "OPERATE_WINDOW_FINISHED"
         );
 
         creator = _newAddress;
