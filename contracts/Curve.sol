@@ -360,19 +360,11 @@ contract Curve is Ownable, ERC1155Burnable {
                 payable(account).transfer(_amount - (mintCost));
             }
             if (platformRate > 0) {
-                require(
-                    platform != address(0),
-                    "Curve: platform address is zero."
-                );
                 platform.transfer(platformProfit);
             }
         } else {
             erc20.safeTransferFrom(account, address(this), mintCost);
             if (platformRate > 0) {
-                require(
-                    platform != address(0),
-                    "Curve: platform address is zero."
-                );
                 erc20.safeTransfer(platform, platformProfit);
             }
         }
@@ -520,10 +512,6 @@ contract Curve is Ownable, ERC1155Burnable {
 
     // anyone can withdraw reserve of erc20 tokens/ETH to receivingAddress's beneficiary account
     function withdraw() public {
-        require(
-            receivingAddress != address(0),
-            "Curve: receivingAddress address is zero."
-        );
         if (address(erc20) == address(0)) {
             receivingAddress.transfer(_getEthBalance() - reserve); // withdraw eth to beneficiary account
             emit Withdraw(receivingAddress, _getEthBalance() - reserve);
