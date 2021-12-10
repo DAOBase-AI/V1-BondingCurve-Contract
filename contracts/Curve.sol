@@ -2,11 +2,12 @@
 
 pragma solidity 0.8.6;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
@@ -21,9 +22,13 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
  * N = n/d, represented by intPower when N is integer
  * v = virtual balance, Displacement of bonding curve
  */
-contract Curve is Ownable, ERC1155Burnable {
-    using Counters for Counters.Counter;
-    using SafeERC20 for IERC20;
+contract Curve is
+    Initializable,
+    OwnableUpgradeable,
+    ERC1155BurnableUpgradeable
+{
+    using CountersUpgradeable for CountersUpgradeable.Counter;
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IAnalyticMath public constant ANALYTICMATH =
         IAnalyticMath(0x350b9F764f13D12bc7765890e5a94FA02B3d1Ac8); // Mathmatical method for calculating power function
@@ -40,11 +45,11 @@ contract Curve is Ownable, ERC1155Burnable {
     string public baseUri;
 
     // token id counter. For erc721 contract, PASS serial number = token id
-    Counters.Counter private tokenIdTracker = Counters.Counter({_value: 1});
+    CountersUpgradeable.Counter private tokenIdTracker;
 
     uint256 public totalSupply; // total supply of erc1155 tokens
 
-    IERC20 public erc20; // collateral token on bonding curve
+    IERC20Upgradeable public erc20; // collateral token on bonding curve
     uint256 public m; // slope of bonding curve
     uint256 public n; // numerator of exponent in curve power function
     uint256 public d; // denominator of exponent in curve power function
@@ -94,20 +99,24 @@ contract Curve is Ownable, ERC1155Burnable {
      * _n,_d: _n/_d = N, exponent of the curve
      * reserve: reserve of collateral tokens stored in bonding curve AMM pool, start with 0
      */
-    constructor(
+    function initialize(
         string[] memory infos, //[0]: _name,[1]: _symbol,[2]: _baseUri
         address[] memory addrs, //[0] _platform, [1]: _receivingAddress, [2]: _erc20
         uint256[] memory parms //[0]_platformRate, [1]: _creatorRate, [2]: _initMintPrice, [3]: _m, [4]: _n, [5]: _d
-    ) ERC1155(infos[2]) {
-        _setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
+    ) public virtual initializer {
+        __Ownable_init();
+        __ERC1155_init(infos[2]);
+        __ERC1155Burnable_init();
 
+        tokenIdTracker = CountersUpgradeable.Counter({_value: 1});
+
+        _setBasicInfo(infos[0], infos[1], infos[2], addrs[2]);
         _setFeeParameters(
             payable(addrs[0]),
             parms[0],
             payable(addrs[1]),
             parms[1]
         );
-
         _setCurveParms(parms[2], parms[3], parms[4], parms[5]);
     }
 
@@ -386,7 +395,7 @@ contract Curve is Ownable, ERC1155Burnable {
     }
 
     function _getErc20Balance() internal view returns (uint256) {
-        return IERC20(erc20).balanceOf(address(this));
+        return IERC20Upgradeable(erc20).balanceOf(address(this));
     }
 
     /**
@@ -530,7 +539,7 @@ contract Curve is Ownable, ERC1155Burnable {
         name = _name;
         symbol = _symbol;
         baseUri = _baseUri;
-        erc20 = IERC20(_erc20);
+        erc20 = IERC20Upgradeable(_erc20);
     }
 
     function _setCurveParms(

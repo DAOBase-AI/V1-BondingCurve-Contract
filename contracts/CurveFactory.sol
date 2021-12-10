@@ -2,10 +2,13 @@
 
 pragma solidity 0.8.6;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "./Curve.sol";
 
-contract CurveFactory is Ownable {
+contract CurveFactory is OwnableUpgradeable {
+    address immutable fixedPeriodImplementation;
+
     uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
     /// @notice Seconds available to operate once the cooldown period is fullfilled
@@ -36,7 +39,9 @@ contract CurveFactory is Ownable {
         uint256 _platformRate,
         uint256 _totalRateLimit
     ) {
+        __Ownable_init();
         _setPlatformParms(_platform, _platformRate, _totalRateLimit);
+        fixedPeriodImplementation = address(new Curve());
     }
 
     // unlock setPlatformParms function
@@ -135,7 +140,8 @@ contract CurveFactory is Ownable {
         parms[4] = _n;
         parms[5] = _d;
 
-        address curveAddr = address(new Curve(infos, addrs, parms));
-        emit CurveCreated(msg.sender, curveAddr, _initMintPrice, _m, _n, _d);
+        address clone = Clones.clone(fixedPeriodImplementation);
+        Curve(clone).initialize(infos, addrs, parms);
+        emit CurveCreated(msg.sender, clone, _initMintPrice, _m, _n, _d);
     }
 }
