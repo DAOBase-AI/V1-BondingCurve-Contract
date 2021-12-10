@@ -1,26 +1,5 @@
 [
   {
-    "inputs": [
-      {
-        "internalType": "string[]",
-        "name": "infos",
-        "type": "string[]"
-      },
-      {
-        "internalType": "address[]",
-        "name": "addrs",
-        "type": "address[]"
-      },
-      {
-        "internalType": "uint256[]",
-        "name": "parms",
-        "type": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "constructor"
-  },
-  {
     "anonymous": false,
     "inputs": [
       {
@@ -610,7 +589,7 @@
     "name": "erc20",
     "outputs": [
       {
-        "internalType": "contract IERC20",
+        "internalType": "contract IERC20Upgradeable",
         "name": "",
         "type": "address"
       }
@@ -667,6 +646,29 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string[]",
+        "name": "infos",
+        "type": "string[]"
+      },
+      {
+        "internalType": "address[]",
+        "name": "addrs",
+        "type": "address[]"
+      },
+      {
+        "internalType": "uint256[]",
+        "name": "parms",
+        "type": "uint256[]"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {

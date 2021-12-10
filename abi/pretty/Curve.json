@@ -30,6 +30,7 @@
   "function getCurrentCostToMint(uint256 _balance) view returns (uint256)",
   "function getCurrentReturnToBurn(uint256 _balance) view returns (uint256)",
   "function getCurrentSupply() view returns (uint256)",
+  "function initialize(string[] infos, address[] addrs, uint256[] parms)",
   "function intPower() view returns (uint256)",
   "function isApprovedForAll(address account, address operator) view returns (bool)",
   "function m() view returns (uint256)",
