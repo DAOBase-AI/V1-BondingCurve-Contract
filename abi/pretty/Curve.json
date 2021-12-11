@@ -1,6 +1,6 @@
 [
   "event ApprovalForAll(address indexed account, address indexed operator, bool approved)",
-  "event BatchBurned(address indexed account, uint256[] indexed tokenIds, uint256[] indexed balances, uint256 returnAmount, uint256 reserveAfterBurn)",
+  "event BatchBurned(address indexed account, uint256[] tokenIds, uint256[] balances, uint256 returnAmount, uint256 reserveAfterBurn)",
   "event Burned(address indexed account, uint256 indexed tokenId, uint256 balance, uint256 returnAmount, uint256 reserveAfterBurn)",
   "event ChangeBeneficiaryUnlock(uint256 cooldownStartTimestamp)",
   "event Minted(uint256 indexed tokenId, uint256 indexed cost, uint256 indexed reserveAfterMint, uint256 balance, uint256 platformProfit, uint256 creatorProfit)",

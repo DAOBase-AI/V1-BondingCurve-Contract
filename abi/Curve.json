@@ -34,13 +34,13 @@
         "type": "address"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256[]",
         "name": "tokenIds",
         "type": "uint256[]"
       },
       {
-        "indexed": true,
+        "indexed": false,
         "internalType": "uint256[]",
         "name": "balances",
         "type": "uint256[]"

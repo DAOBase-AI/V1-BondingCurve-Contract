@@ -29,7 +29,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 1,
+        runs: 200,
       },
       outputSelection: {
         '*': {
@@ -66,6 +66,11 @@ module.exports = {
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,
     currency: 'USD',
+    gasPrice: 200,
+    showTimeSpent: true,
+    coinmarketcap: process.env.COINMARKETCAP_API,
+    // outputFile: './gasReporter',
+    // noColors: true,
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,

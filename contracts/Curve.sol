@@ -31,7 +31,7 @@ contract Curve is
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IAnalyticMath public constant ANALYTICMATH =
-        IAnalyticMath(0x350b9F764f13D12bc7765890e5a94FA02B3d1Ac8); // Mathmatical method for calculating power function
+        IAnalyticMath(0xb3296D5c49BC6B42B984Aeb174c120131de5F0D3); // Mathmatical method for calculating power function
 
     uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
@@ -83,8 +83,8 @@ contract Curve is
     );
     event BatchBurned(
         address indexed account,
-        uint256[] indexed tokenIds,
-        uint256[] indexed balances,
+        uint256[] tokenIds,
+        uint256[] balances,
         uint256 returnAmount,
         uint256 reserveAfterBurn
     );
