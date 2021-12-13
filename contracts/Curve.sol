@@ -31,7 +31,7 @@ contract Curve is
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IAnalyticMath public constant ANALYTICMATH =
-        IAnalyticMath(0xb3296D5c49BC6B42B984Aeb174c120131de5F0D3); // Mathmatical method for calculating power function
+        IAnalyticMath(0x6F1bB529BEd91cD7f75b14d68933AeC9d71eb723); // Mathmatical method for calculating power function
 
     uint256 public immutable COOLDOWN_SECONDS = 2 days;
 
