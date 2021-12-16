@@ -3,11 +3,11 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/CountersUpgradeable.sol";
+import "./utils/OwnableUpgradeable.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 
 /**
@@ -32,13 +32,6 @@ contract CurvePolygon is
 
     IAnalyticMath public constant ANALYTICMATH =
         IAnalyticMath(0xd4D19A91b0af5093E5CEEE658617AadbE1E1A999); // Mathmatical method for calculating power function
-
-    uint256 public immutable COOLDOWN_SECONDS = 2 days;
-
-    /// @notice Seconds available to operate once the cooldown period is fullfilled
-    uint256 public immutable OPERATE_WINDOW = 1 days;
-
-    uint256 public cooldownStartTimestamp;
 
     string public name; // Contract name
     string public symbol; // Contract symbol
@@ -65,7 +58,6 @@ contract CurvePolygon is
     address payable public receivingAddress; // receivingAddress's commission account
     uint256 public creatorRate; // receivingAddress's commission rate in pph
 
-    event ChangeBeneficiaryUnlock(uint256 cooldownStartTimestamp);
     event Minted(
         uint256 indexed tokenId,
         uint256 indexed cost,
@@ -101,10 +93,10 @@ contract CurvePolygon is
      */
     function initialize(
         string[] memory infos, //[0]: _name,[1]: _symbol,[2]: _baseUri
-        address[] memory addrs, //[0] _platform, [1]: _receivingAddress, [2]: _erc20
+        address[] memory addrs, //[0] _platform, [1]: _receivingAddress, [2]: _erc20 [3]: _timelock
         uint256[] memory parms //[0]_platformRate, [1]: _creatorRate, [2]: _initMintPrice, [3]: _m, [4]: _n, [5]: _d
     ) public virtual initializer {
-        __Ownable_init();
+        __Ownable_init(addrs[3]);
         __ERC1155_init(infos[2]);
         __ERC1155Burnable_init();
 
@@ -143,29 +135,7 @@ contract CurvePolygon is
     function changeBeneficiary(address payable _newAddress) public onlyOwner {
         require(_newAddress != address(0), "Curve: new address is zero");
 
-        require(
-            block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
-            "INSUFFICIENT_COOLDOWN"
-        );
-        require(
-            block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-                OPERATE_WINDOW,
-            "OPERATE_WINDOW_FINISHED"
-        );
-
         receivingAddress = _newAddress;
-
-        // clear cooldown after changeBeneficiary
-        if (cooldownStartTimestamp != 0) {
-            cooldownStartTimestamp = 0;
-        }
-    }
-
-    // unlock changeBeneficiary function
-    function changeBeneficiaryUnlock() public onlyOwner {
-        cooldownStartTimestamp = block.timestamp;
-
-        emit ChangeBeneficiaryUnlock(block.timestamp);
     }
 
     /**

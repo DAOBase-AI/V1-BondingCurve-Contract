@@ -3,18 +3,14 @@
 pragma solidity 0.8.6;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "./utils/OwnableUpgradeable.sol";
+import "./utils/Timelock.sol";
 import "./Curve.sol";
 
 contract CurveFactory is OwnableUpgradeable {
-    address immutable fixedPeriodImplementation;
+    address public immutable CURVE_IMPL;
+    address public immutable TIMELOCK_IMPL;
 
-    uint256 public immutable COOLDOWN_SECONDS = 2 days;
-
-    /// @notice Seconds available to operate once the cooldown period is fullfilled
-    uint256 public immutable OPERATE_WINDOW = 1 days;
-
-    uint256 public cooldownStartTimestamp;
     address payable public platform; // platform commision account
     uint256 public platformRate; // % of total minting cost as platform commission
     uint256 public totalRateLimit;
@@ -32,22 +28,17 @@ contract CurveFactory is OwnableUpgradeable {
         uint256 _platformRate,
         uint256 _totalRateLimit
     );
-    event SetPlatformParmsUnlock(uint256 cooldownStartTimestamp);
 
     constructor(
         address payable _platform,
         uint256 _platformRate,
-        uint256 _totalRateLimit
+        uint256 _totalRateLimit,
+        address _timelock
     ) {
-        __Ownable_init();
+        __Ownable_init(_timelock);
         _setPlatformParms(_platform, _platformRate, _totalRateLimit);
-        fixedPeriodImplementation = address(new Curve());
-    }
-
-    // unlock setPlatformParms function
-    function setPlatformParmsUnlock() public onlyOwner {
-        cooldownStartTimestamp = block.timestamp;
-        emit SetPlatformParmsUnlock(block.timestamp);
+        CURVE_IMPL = address(new Curve());
+        TIMELOCK_IMPL = address(new Timelock());
     }
 
     // set up the platform commission account and platform commission rate, only operable by contract owner, _platformRate is in pph
@@ -57,22 +48,7 @@ contract CurveFactory is OwnableUpgradeable {
         uint256 _platformRate,
         uint256 _totalRateLimit
     ) public onlyOwner {
-        require(
-            block.timestamp > cooldownStartTimestamp + COOLDOWN_SECONDS,
-            "INSUFFICIENT_COOLDOWN"
-        );
-        require(
-            block.timestamp - (cooldownStartTimestamp + COOLDOWN_SECONDS) <=
-                OPERATE_WINDOW,
-            "OPERATE_WINDOW_FINISHED"
-        );
-
         _setPlatformParms(_platform, _platformRate, _totalRateLimit);
-
-        // clear cooldown after changeBeneficiary
-        if (cooldownStartTimestamp != 0) {
-            cooldownStartTimestamp = 0;
-        }
     }
 
     // set up the platform parameters internal
@@ -114,7 +90,8 @@ contract CurveFactory is OwnableUpgradeable {
         uint256 _m,
         uint256 _n,
         uint256 _d,
-        string memory _baseUri
+        string memory _baseUri,
+        address _timelock
     ) public {
         // require(info.length == 3 && parms.length == 4);
         require(
@@ -127,10 +104,11 @@ contract CurveFactory is OwnableUpgradeable {
         infos[1] = _symbol;
         infos[2] = _baseUri;
 
-        address[] memory addrs = new address[](3);
+        address[] memory addrs = new address[](4);
         addrs[0] = platform;
         addrs[1] = _receivingAddress;
         addrs[2] = _erc20;
+        addrs[3] = _timelock == address(0) ? cloneTimelock() : _timelock;
 
         uint256[] memory parms = new uint256[](6);
         parms[0] = platformRate;
@@ -140,8 +118,23 @@ contract CurveFactory is OwnableUpgradeable {
         parms[4] = _n;
         parms[5] = _d;
 
-        address clone = Clones.clone(fixedPeriodImplementation);
+        address clone = Clones.clone(CURVE_IMPL);
         Curve(clone).initialize(infos, addrs, parms);
         emit CurveCreated(msg.sender, clone, _initMintPrice, _m, _n, _d);
+    }
+
+    function cloneTimelock() private returns (address payable newTimelock) {
+        newTimelock = payable(Clones.clone(TIMELOCK_IMPL));
+
+        uint256 minDelay = 2 days;
+        address[] memory proposers = new address[](1);
+        address[] memory executors = new address[](1);
+        proposers[0] = msg.sender;
+        executors[0] = address(0);
+
+        Timelock(newTimelock).initialize(minDelay, proposers, executors);
+        (minDelay, proposers, executors);
+
+        return newTimelock;
     }
 }
