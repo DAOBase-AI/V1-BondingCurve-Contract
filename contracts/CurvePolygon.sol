@@ -11,6 +11,7 @@ import "./utils/OwnableUpgradeable.sol";
 import "./math-utils/interfaces/IAnalyticMath.sol";
 import "./interfaces/aave/ILendingPool.sol";
 import "./interfaces/aave/IWETHGateway.sol";
+import "./interfaces/aave/IAaveIncentivesController.sol";
 
 /**
  * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
@@ -24,7 +25,7 @@ import "./interfaces/aave/IWETHGateway.sol";
  * N = n/d, represented by intPower when N is integer
  * v = virtual balance, Displacement of bonding curve
  */
-contract Curve is
+contract CurvePolygon is
     Initializable,
     OwnableUpgradeable,
     ERC1155BurnableUpgradeable
@@ -37,6 +38,7 @@ contract Curve is
 
     ILendingPoolAddressesProvider public constant AAVE_PROVIDER = ILendingPoolAddressesProvider(0xd05e3E715d945B59290df0ae8eF85c1BdB684744); // prettier-ignore
     IWETHGateway public constant WETHGATEWAY = IWETHGateway(0xbEadf48d62aCC944a06EEaE0A9054A90E5A7dc97); // prettier-ignore
+    IAaveIncentivesController public constant AAVE_CREDITS_PROVIDER = IAaveIncentivesController(0x357D51124f59836DeD84c8a1730D72B749d8BC23); // prettier-ignore
 
     string public name; // Contract name
     string public symbol; // Contract symbol
@@ -393,8 +395,16 @@ contract Curve is
         }
     }
 
-    function _getErc20Balance() internal view returns (uint256) {
-        return IERC20Upgradeable(erc20).balanceOf(address(this));
+    function getRewardsBalance() public view returns (uint256) {
+        ILendingPool lendingPool = ILendingPool(AAVE_PROVIDER.getLendingPool());
+
+        address[] memory assets = new address[](1);
+
+        assets[0] = lendingPool
+            .getReserveData(WETHGATEWAY.getWETHAddress())
+            .aTokenAddress;
+
+        return AAVE_CREDITS_PROVIDER.getRewardsBalance(assets, address(this));
     }
 
     /**
@@ -521,12 +531,13 @@ contract Curve is
     // anyone can withdraw reserve of erc20 tokens/ETH to receivingAddress's beneficiary account
     function withdraw() public {
         uint256 creatorBalance = getCreatorProfits();
+        address to = receivingAddress;
 
         address(erc20) == address(0)
-            ? _withdrawAave(receivingAddress, creatorBalance, true) // withdraw eth to beneficiary account
-            : _withdrawAave(receivingAddress, creatorBalance, false); // withdraw erc20 tokens to beneficiary account
+            ? _withdrawAave(to, creatorBalance, true) // withdraw eth to beneficiary account
+            : _withdrawAave(to, creatorBalance, false); // withdraw erc20 tokens to beneficiary account
 
-        emit Withdraw(receivingAddress, creatorBalance);
+        emit Withdraw(to, creatorBalance);
     }
 
     function _setBasicInfo(
@@ -588,12 +599,13 @@ contract Curve is
     ) private {
         address provider = AAVE_PROVIDER.getLendingPool();
         address gatewayAddress = address(WETHGATEWAY);
-        address weth = WETHGATEWAY.getWETHAddress();
+
+        address aWETHAddress = ILendingPool(provider)
+            .getReserveData(WETHGATEWAY.getWETHAddress())
+            .aTokenAddress;
 
         if (bETH) {
-            IERC20Upgradeable aWETH = IERC20Upgradeable(
-                ILendingPool(provider).getReserveData(weth).aTokenAddress
-            );
+            IERC20Upgradeable aWETH = IERC20Upgradeable(aWETHAddress);
 
             // Approve gatewayAddress to spend aWETH
             if (aWETH.allowance(address(this), gatewayAddress) == 0) {
@@ -605,6 +617,13 @@ contract Curve is
         } else {
             // Withdraw on onBehalf of msg.sender
             ILendingPool(provider).withdraw(address(erc20), _amount, _to);
+        }
+
+        if (_to == receivingAddress) {
+            address[] memory assets = new address[](1);
+            assets[0] = aWETHAddress;
+
+            AAVE_CREDITS_PROVIDER.claimRewards(assets, type(uint256).max, _to);
         }
     }
 
