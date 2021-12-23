@@ -22,7 +22,7 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
  * N = n/d, represented by intPower when N is integer
  * v = virtual balance, Displacement of bonding curve
  */
-contract Curve is
+contract CurvePolygon is
     Initializable,
     OwnableUpgradeable,
     ERC1155BurnableUpgradeable
@@ -31,7 +31,7 @@ contract Curve is
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     IAnalyticMath public constant ANALYTICMATH =
-        IAnalyticMath(0x6F1bB529BEd91cD7f75b14d68933AeC9d71eb723); // Mathmatical method for calculating power function
+        IAnalyticMath(0xd4D19A91b0af5093E5CEEE658617AadbE1E1A999); // Mathmatical method for calculating power function
 
     string public name; // Contract name
     string public symbol; // Contract symbol
