@@ -15,6 +15,11 @@
         "internalType": "uint256",
         "name": "_totalRateLimit",
         "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "_timelock",
+        "type": "address"
       }
     ],
     "stateMutability": "nonpayable",
@@ -108,26 +113,13 @@
     "type": "event"
   },
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "cooldownStartTimestamp",
-        "type": "uint256"
-      }
-    ],
-    "name": "SetPlatformParmsUnlock",
-    "type": "event"
-  },
-  {
     "inputs": [],
-    "name": "COOLDOWN_SECONDS",
+    "name": "CURVE_IMPL",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "address",
         "name": "",
-        "type": "uint256"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -135,25 +127,12 @@
   },
   {
     "inputs": [],
-    "name": "OPERATE_WINDOW",
+    "name": "TIMELOCK_IMPL",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "address",
         "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cooldownStartTimestamp",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -210,6 +189,11 @@
         "internalType": "string",
         "name": "_baseUri",
         "type": "string"
+      },
+      {
+        "internalType": "address",
+        "name": "_timelock",
+        "type": "address"
       }
     ],
     "name": "createCurve",
@@ -282,13 +266,6 @@
       }
     ],
     "name": "setPlatformParms",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "setPlatformParmsUnlock",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
