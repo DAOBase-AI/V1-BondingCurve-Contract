@@ -12,6 +12,7 @@ import "./math-utils/interfaces/IAnalyticMath.sol";
 import "./interfaces/aave/ILendingPool.sol";
 import "./interfaces/aave/IWETHGateway.sol";
 import "./interfaces/aave/IAaveIncentivesController.sol";
+import "./interfaces/aave/IAaveProtocolDataProvider.sol";
 
 /**
  * @dev thePASS Bonding Curve - minting NFT through erc20 or eth
@@ -64,6 +65,7 @@ contract CurvePolygon is
 
     address payable public receivingAddress; // receivingAddress's commission account
     uint256 public creatorRate; // receivingAddress's commission rate in pph
+    bool public depositAave;
 
     event Minted(
         uint256 indexed tokenId,
@@ -117,6 +119,8 @@ contract CurvePolygon is
             parms[1]
         );
         _setCurveParms(parms[2], parms[3], parms[4], parms[5]);
+
+        checkAaveStatus(addrs[2]) ? depositAave = true : depositAave = false;
     }
 
     // @receivingAddress commission account and rate initilization
@@ -192,7 +196,9 @@ contract CurvePolygon is
         totalSupply -= _balance;
         reserve = reserve - burnReturn;
 
-        _withdrawAave(_account, burnReturn, false);
+        depositAave
+            ? _withdrawAave(_account, burnReturn, false)
+            : erc20.safeTransfer(_account, burnReturn);
 
         emit Burned(_account, _tokenId, _balance, burnReturn, reserve);
     }
@@ -217,7 +223,9 @@ contract CurvePolygon is
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
         reserve = reserve - burnReturn;
 
-        _withdrawAave(_account, burnReturn, false);
+        depositAave
+            ? _withdrawAave(_account, burnReturn, false)
+            : erc20.safeTransfer(_account, burnReturn);
 
         emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
     }
@@ -277,7 +285,9 @@ contract CurvePolygon is
 
         reserve = reserve - burnReturn;
 
-        _withdrawAave(_account, burnReturn, true);
+        depositAave
+            ? _withdrawAave(_account, burnReturn, true)
+            : payable(_account).transfer(burnReturn);
 
         emit Burned(_account, _tokenId, _balance, burnReturn, reserve);
     }
@@ -301,7 +311,9 @@ contract CurvePolygon is
 
         reserve = reserve - burnReturn;
 
-        _withdrawAave(_account, burnReturn, false);
+        depositAave
+            ? _withdrawAave(_account, burnReturn, false)
+            : payable(_account).transfer(burnReturn);
 
         emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
     }
@@ -362,7 +374,9 @@ contract CurvePolygon is
             }
         }
 
-        _depositAave(mintCost - platformProfit, bETH);
+        if (checkAaveStatus(address(erc20))) {
+            _depositAave(mintCost - platformProfit, bETH);
+        }
 
         emit Minted(
             tokenId,
@@ -625,6 +639,18 @@ contract CurvePolygon is
 
             AAVE_CREDITS_PROVIDER.claimRewards(assets, type(uint256).max, _to);
         }
+    }
+
+    function checkAaveStatus(address asset) internal view returns (bool res) {
+        IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(
+                AAVE_PROVIDER.getAddress(
+                    0x0100000000000000000000000000000000000000000000000000000000000000
+                )
+            );
+        (, , , , , , , , bool isActive, bool isFrozen) = aaveProtocolDataProvider // prettier-ignore
+            .getReserveConfigurationData(asset);
+
+        if (isActive && !isFrozen) return true;
     }
 
     /**
