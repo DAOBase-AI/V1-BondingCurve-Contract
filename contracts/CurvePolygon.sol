@@ -333,7 +333,12 @@ contract CurvePolygon is
     }
 
     function getCreatorProfits() public view returns (uint256) {
-        return getUnderlyingAssetBalance() - reserve;
+        return
+            depositAave
+                ? getUnderlyingAssetBalance() - reserve
+                : (address(erc20) == address(0))
+                ? erc20.balanceOf(address(this)) - reserve
+                : address(this).balance;
     }
 
     // internal function to mint PASS
