@@ -379,7 +379,7 @@ contract CurvePolygon is
             }
         }
 
-        if (checkAaveStatus(address(erc20))) {
+        if (depositAave) {
             _depositAave(mintCost - platformProfit, bETH);
         }
 
@@ -551,10 +551,16 @@ contract CurvePolygon is
     function withdraw() public {
         uint256 creatorBalance = getCreatorProfits();
         address to = receivingAddress;
+        bool bETH = address(erc20) == address(0);
 
-        address(erc20) == address(0)
-            ? _withdrawAave(to, creatorBalance, true) // withdraw eth to beneficiary account
-            : _withdrawAave(to, creatorBalance, false); // withdraw erc20 tokens to beneficiary account
+        if (depositAave) {
+            // withdraw eth to beneficiary account or withdraw erc20 tokens to beneficiary account
+            _withdrawAave(to, creatorBalance, bETH);
+        } else {
+            bETH
+                ? receivingAddress.transfer(creatorBalance)
+                : erc20.safeTransfer(receivingAddress, creatorBalance);
+        }
 
         emit Withdraw(to, creatorBalance);
     }
