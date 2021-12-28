@@ -35,7 +35,7 @@ contract CurvePolygon is
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
     // Mathmatical method for calculating power function
-    IAnalyticMath public constant ANALYTICMATH = IAnalyticMath(0x6F1bB529BEd91cD7f75b14d68933AeC9d71eb723); // prettier-ignore
+    IAnalyticMath public constant ANALYTICMATH = IAnalyticMath(0xd4D19A91b0af5093E5CEEE658617AadbE1E1A999); // prettier-ignore
 
     ILendingPoolAddressesProvider public constant AAVE_PROVIDER = ILendingPoolAddressesProvider(0xd05e3E715d945B59290df0ae8eF85c1BdB684744); // prettier-ignore
     IWETHGateway public constant WETHGATEWAY = IWETHGateway(0xbEadf48d62aCC944a06EEaE0A9054A90E5A7dc97); // prettier-ignore
