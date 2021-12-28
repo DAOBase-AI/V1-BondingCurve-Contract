@@ -338,7 +338,7 @@ contract CurvePolygon is
                 ? getUnderlyingAssetBalance() - reserve
                 : (address(erc20) == address(0))
                 ? erc20.balanceOf(address(this)) - reserve
-                : address(this).balance;
+                : address(this).balance - reserve;
     }
 
     // internal function to mint PASS
