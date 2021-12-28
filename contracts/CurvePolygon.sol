@@ -642,6 +642,9 @@ contract CurvePolygon is
     }
 
     function checkAaveStatus(address asset) internal view returns (bool res) {
+        if (asset == address(0)) {
+            asset = WETHGATEWAY.getWETHAddress();
+        }
         IAaveProtocolDataProvider aaveProtocolDataProvider = IAaveProtocolDataProvider(
                 AAVE_PROVIDER.getAddress(
                     0x0100000000000000000000000000000000000000000000000000000000000000
