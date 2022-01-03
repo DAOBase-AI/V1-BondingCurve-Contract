@@ -204,11 +204,13 @@ contract Curve is
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
-            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
+
         reserve = reserve - burnReturn;
+        totalSupply = totalSupply - totalBalance;
+
         erc20.safeTransfer(_account, burnReturn);
 
         emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
@@ -285,12 +287,13 @@ contract Curve is
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
-            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
         reserve = reserve - burnReturn;
+        totalSupply = totalSupply - totalBalance;
+
         payable(_account).transfer(burnReturn);
 
         emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
