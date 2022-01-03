@@ -217,11 +217,12 @@ contract CurvePolygon is
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
-            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
+
         reserve = reserve - burnReturn;
+        totalSupply = totalSupply - totalBalance;
 
         depositAave
             ? _withdrawAave(_account, burnReturn, false)
@@ -304,15 +305,15 @@ contract CurvePolygon is
         uint256 totalBalance;
         for (uint256 i = 0; i < _balances.length; i++) {
             totalBalance += _balances[i];
-            totalSupply -= _balances[i];
         }
 
         uint256 burnReturn = getCurrentReturnToBurn(totalBalance);
 
         reserve = reserve - burnReturn;
+        totalSupply = totalSupply - totalBalance;
 
         depositAave
-            ? _withdrawAave(_account, burnReturn, false)
+            ? _withdrawAave(_account, burnReturn, true)
             : payable(_account).transfer(burnReturn);
 
         emit BatchBurned(_account, _tokenIds, _balances, burnReturn, reserve);
